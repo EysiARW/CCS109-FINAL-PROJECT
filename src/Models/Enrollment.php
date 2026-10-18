@@ -21,9 +21,27 @@ class Enrollment {
     }
 
     public function getRemarks(): string {
-        if ($this->grade === null || $this->grade === '') {
+        if ($this->grade === null || trim($this->grade) === '') {
             return 'In progress';
         }
-        return floatval($this->grade) <= 3.0 ? 'Passed' : 'Failed';
+        $upper = strtoupper(trim($this->grade));
+        return match ($upper) {
+            'INC'   => 'Incomplete',
+            'DRP'   => 'Dropped',
+            'W'     => 'Withdrawn',
+            'IP'    => 'In progress',
+            'NG'    => 'No Grade',
+            default => is_numeric($this->grade)
+                ? ((float)$this->grade <= 3.0 ? 'Passed' : ((float)$this->grade === 4.0 ? 'Conditional' : 'Failed'))
+                : 'In progress',
+        };
+    }
+
+    public function getStatusTone(): string {
+        return match ($this->getRemarks()) {
+            'Passed'                         => 'success',
+            'Failed', 'Dropped', 'Withdrawn' => 'danger',
+            default                          => 'warning',
+        };
     }
 }

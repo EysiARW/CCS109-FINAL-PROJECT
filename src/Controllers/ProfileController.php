@@ -2,18 +2,22 @@
 namespace App\Controllers;
 
 use App\Repositories\StudentRepository;
+use App\Repositories\ClearanceRepository;
 use App\Utils\View;
 
 class ProfileController {
     private StudentRepository $studentRepo;
+    private ClearanceRepository $clearanceRepo;
 
     public function __construct() {
-        $this->studentRepo = new StudentRepository();
+        $this->studentRepo   = new StudentRepository();
+        $this->clearanceRepo = new ClearanceRepository();
     }
 
     public function index(): void {
-        $studentId = (int)($_SESSION['student_id'] ?? 1);
-        $student   = $this->studentRepo->findById($studentId);
+        $studentId  = (int)($_SESSION['student_id'] ?? 1);
+        $student    = $this->studentRepo->findById($studentId);
+        $clearances = $this->clearanceRepo->getStudentClearances($studentId);
 
         $pwUpdated = !empty($_GET['pw_updated']);
         $pwError   = $_GET['pw_error'] ?? null;
@@ -28,6 +32,7 @@ class ProfileController {
         View::render('student/profile', [
             'page'         => 'profile',
             'student'      => $student,
+            'clearances'   => $clearances,
             'pwUpdated'    => $pwUpdated,
             'errorMessage' => $errorMessage,
         ]);

@@ -115,6 +115,48 @@ $address   = $student->address ?? ($_SESSION['address'] ?? 'Brgy. San Pedro, Pue
   </section>
 </div>
 
+<?php if (!empty($clearances)): ?>
+<section class="card table-card" style="margin-top:24px;">
+  <div class="card-heading">
+    <div>
+      <h2>Departmental clearance status</h2>
+      <p>Live clearance evaluation across university offices required for document release and enrollment.</p>
+    </div>
+    <span class="muted-label"><?= count($clearances) ?> offices</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Department / Office</th>
+          <th>Clearance Status</th>
+          <th>Date Cleared</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($clearances as $cl): ?>
+          <tr>
+            <td><strong><?= htmlspecialchars($cl->departmentName) ?></strong></td>
+            <td><?= View::statusBadge($cl->getStatusLabel(), $cl->getStatusTone()) ?></td>
+            <td><?= $cl->dateCleared ? htmlspecialchars(date('M d, Y', strtotime($cl->dateCleared))) : '—' ?></td>
+            <td>
+              <?php if ($cl->status === 'Cleared'): ?>
+                <span style="color:#26593b;font-size:12px;font-weight:600;">No pending obligations</span>
+              <?php elseif ($cl->status === 'Hold'): ?>
+                <span style="color:#b42318;font-size:12px;font-weight:600;">Action required — visit office</span>
+              <?php else: ?>
+                <span style="color:#a6631b;font-size:12px;">Awaiting office evaluation</span>
+              <?php endif; ?>
+            </td>
+          </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+</section>
+<?php endif; ?>
+
 <script>
 (function() {
   var newPw = document.getElementById('new_pw');

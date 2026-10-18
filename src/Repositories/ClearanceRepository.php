@@ -151,6 +151,34 @@ class ClearanceRepository {
         return $students;
     }
 
+    public function findStudentByNameOrCode(string $query): ?array {
+        $q = trim($query);
+        if ($q === '') {
+            return null;
+        }
+        $students = $this->getAllStudents();
+        $qLower   = strtolower($q);
+        foreach ($students as $st) {
+            if (strtolower($st['code']) === $qLower || strtolower($st['name']) === $qLower) {
+                return $st;
+            }
+        }
+        foreach ($students as $st) {
+            if (str_contains(strtolower($st['name']), $qLower) || str_contains(strtolower($st['code']), $qLower)) {
+                return $st;
+            }
+        }
+        $num = (int)preg_replace('/\D/', '', $q);
+        if ($num > 0) {
+            foreach ($students as $st) {
+                if ($st['id'] === $num) {
+                    return $st;
+                }
+            }
+        }
+        return null;
+    }
+
     public function addClearance(int $studentId, int $departmentId, string $status = 'Pending'): bool {
         if (!$this->db) {
             return true;

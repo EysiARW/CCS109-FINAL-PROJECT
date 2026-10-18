@@ -9,6 +9,16 @@ use App\Utils\Icon;
  * @var string|null $semester
  * @var bool $gradeUpdated
  */
+$totalEnrollments = count($enrollments);
+$encodedCount     = 0;
+$pendingCount     = 0;
+foreach ($enrollments as $en) {
+    if (!empty($en['grade'])) {
+        $encodedCount++;
+    } else {
+        $pendingCount++;
+    }
+}
 ?>
 <?= View::pageHeader(
     'Grades encoding',
@@ -23,6 +33,24 @@ use App\Utils\Icon;
   <button onclick="this.parentElement.style.display='none'"><?= Icon::x() ?></button>
 </div>
 <?php endif; ?>
+
+<div class="grades-summary-strip">
+  <div class="grades-summary-item">
+    <span>Total Course Records</span>
+    <strong><?= $totalEnrollments ?></strong>
+    <small>Enrolled Student Subjects</small>
+  </div>
+  <div class="grades-summary-item">
+    <span>Grades Encoded</span>
+    <strong><?= $encodedCount ?></strong>
+    <small>Finalized Term Marks</small>
+  </div>
+  <div class="grades-summary-item">
+    <span>Pending Encoding</span>
+    <strong style="color:<?= $pendingCount > 0 ? '#a6631b' : '#26593b' ?>;"><?= $pendingCount ?></strong>
+    <small>Awaiting Faculty Submission</small>
+  </div>
+</div>
 
 <section class="card table-card">
   <div class="toolbar">
@@ -72,7 +100,23 @@ use App\Utils\Icon;
               <td><?= htmlspecialchars((string)$en['units']) ?></td>
               <td>
                 <?php if ($en['grade']): ?>
-                  <?= View::statusBadge($en['grade'] . ' · ' . ((float)$en['grade'] <= 3.0 ? 'Passed' : 'Failed'), (float)$en['grade'] <= 3.0 ? 'success' : 'danger') ?>
+                  <?php
+                  $gUpper = strtoupper(trim((string)$en['grade']));
+                  if ($gUpper === 'INC') {
+                      $gLabel = 'INC · Incomplete';
+                      $gTone  = 'warning';
+                  } elseif ($gUpper === 'DRP') {
+                      $gLabel = 'DRP · Dropped';
+                      $gTone  = 'danger';
+                  } elseif (is_numeric($en['grade']) && (float)$en['grade'] <= 3.0) {
+                      $gLabel = $en['grade'] . ' · Passed';
+                      $gTone  = 'success';
+                  } else {
+                      $gLabel = $en['grade'] . ' · Failed';
+                      $gTone  = 'danger';
+                  }
+                  ?>
+                  <?= View::statusBadge($gLabel, $gTone) ?>
                 <?php else: ?>
                   <?= View::statusBadge('Not encoded', 'warning') ?>
                 <?php endif; ?>

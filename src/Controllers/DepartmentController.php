@@ -45,6 +45,15 @@ class DepartmentController {
 
     public function addClearance(): void {
         $studentId    = (int)($_POST['student_id'] ?? 0);
+        $studentInput = trim((string)($_POST['student_search'] ?? $_POST['student_input'] ?? ''));
+
+        if ($studentId <= 0 && $studentInput !== '') {
+            $found = $this->clearanceRepo->findStudentByNameOrCode($studentInput);
+            if ($found) {
+                $studentId = $found['id'];
+            }
+        }
+
         $departmentId = (int)($_POST['department_id'] ?? 0);
         $status       = trim($_POST['status'] ?? 'Pending');
 

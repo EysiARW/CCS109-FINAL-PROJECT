@@ -1,0 +1,225 @@
+{
+    "timestamp": "2026-10-18 07:48:11",
+    "total": 36,
+    "passed": 36,
+    "failed": 0,
+    "rate": 100,
+    "results": [
+        {
+            "suite": "Database",
+            "test": "Active PDO MySQL Connection Established",
+            "status": "PASS",
+            "details": "Connected to ssis_db"
+        },
+        {
+            "suite": "Database",
+            "test": "All 8 3NF Relational Tables Exist",
+            "status": "PASS",
+            "details": "Tables: AdminUser, Clearance, Course, Department, DocumentRequest, Enrollment, Payment, Student"
+        },
+        {
+            "suite": "Database",
+            "test": "Student Seed Data Populated",
+            "status": "PASS",
+            "details": "Count: 3"
+        },
+        {
+            "suite": "Database",
+            "test": "Course Catalog Seed Data Populated",
+            "status": "PASS",
+            "details": "Count: 6"
+        },
+        {
+            "suite": "Authentication",
+            "test": "Student Login by ID (Juan Dela Cruz)",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Authentication",
+            "test": "Student Login by Email",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Authentication",
+            "test": "SuperAdmin Login (ana.reyes)",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Authentication",
+            "test": "Cashier Role Login (cashier01)",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Authentication",
+            "test": "Registrar Role Login (m.santiago)",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Authentication",
+            "test": "Department Staff Role Login (dept.staff)",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Authentication",
+            "test": "Negative Test: Invalid Student Password Rejected",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Authentication",
+            "test": "Negative Test: Nonexistent Account Rejected",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Authentication",
+            "test": "Negative Test: Empty Credentials Rejected Gracefully",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Cryptography",
+            "test": "Password Hashing Uses Secure Bcrypt (Algo 2y)",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Cryptography",
+            "test": "Bcrypt Verification Functions Correctly",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Cryptography",
+            "test": "Wrong Password Verification Rejection",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Security-SQLi",
+            "test": "SQLi Injection Probe #0 Defeated: [' OR '1'='1]",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Security-SQLi",
+            "test": "SQLi Injection Probe #1 Defeated: [admin' --]",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Security-SQLi",
+            "test": "SQLi Injection Probe #2 Defeated: [1' OR '1' = '1' \/*]",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Security-SQLi",
+            "test": "SQLi Injection Probe #3 Defeated: [' UNION SELECT 1, 'admin', 'pass', 'admin@cuyotech.edu', 'hash', 'BSIT', 1, 'Active', 'Addr' -- ]",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Security-SQLi",
+            "test": "SQLi Injection Probe #4 Defeated: ['; DROP TABLE Student; --]",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Repository",
+            "test": "Student Profile Query Returns Valid Model",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Repository",
+            "test": "Student Enrolled Courses Retrieval",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Repository",
+            "test": "Student Enrolled Grades Fetch",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Repository",
+            "test": "Student Enrollments Fetch",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Repository",
+            "test": "Payment Transaction Ledger Retrieval",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Repository",
+            "test": "Document Request History Retrieval",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Repository",
+            "test": "Admin All Requests Retrieval",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "Repository",
+            "test": "Department Clearance Status Retrieval",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "AcademicLogic",
+            "test": "Weighted GPA Formula Mathematical Accuracy",
+            "status": "PASS",
+            "details": "Calculated GPA: 1.41 (Expected: 1.41)"
+        },
+        {
+            "suite": "Security-XSS",
+            "test": "XSS Script Tag Neutralization",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "RBAC",
+            "test": "RBAC Policy Configured for Role [Student]",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "RBAC",
+            "test": "RBAC Policy Configured for Role [Registrar]",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "RBAC",
+            "test": "RBAC Policy Configured for Role [Cashier]",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "RBAC",
+            "test": "RBAC Policy Configured for Role [DepartmentStaff]",
+            "status": "PASS",
+            "details": ""
+        },
+        {
+            "suite": "RBAC",
+            "test": "RBAC Policy Configured for Role [Administrator]",
+            "status": "PASS",
+            "details": ""
+        }
+    ]
+}

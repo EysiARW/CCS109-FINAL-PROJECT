@@ -6,6 +6,18 @@ use App\Utils\Icon;
  * @var \App\Models\DocumentRequest[] $requests
  * @var bool $statusUpdated
  */
+$activeCount   = 0;
+$readyCount    = 0;
+$releasedCount = 0;
+foreach ($requests as $r) {
+    if (in_array($r->status, ['Pending', 'Processing'], true)) {
+        $activeCount++;
+    } elseif (in_array($r->status, ['Ready for release', 'Ready'], true)) {
+        $readyCount++;
+    } elseif ($r->status === 'Released') {
+        $releasedCount++;
+    }
+}
 ?>
 <?= View::pageHeader('Document requests', 'Review payments and move requests through fulfillment.') ?>
 <?= View::dbStatusBanner() ?>
@@ -17,6 +29,24 @@ use App\Utils\Icon;
   <button onclick="this.parentElement.style.display='none'"><?= Icon::x() ?></button>
 </div>
 <?php endif; ?>
+
+<div class="grades-summary-strip">
+  <div class="grades-summary-item">
+    <span>Pending &amp; Processing</span>
+    <strong style="color:<?= $activeCount > 0 ? '#a6631b' : '#26593b' ?>;"><?= $activeCount ?></strong>
+    <small>In Fulfillment Queue</small>
+  </div>
+  <div class="grades-summary-item">
+    <span>Ready for Release</span>
+    <strong style="color:#26593b;"><?= $readyCount ?></strong>
+    <small>Awaiting Student Pickup</small>
+  </div>
+  <div class="grades-summary-item">
+    <span>Released Credentials</span>
+    <strong><?= $releasedCount ?></strong>
+    <small>Completed Document Requests</small>
+  </div>
+</div>
 
 <section class="card table-card">
   <div class="toolbar">

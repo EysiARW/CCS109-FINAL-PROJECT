@@ -23,10 +23,14 @@ class Clearance {
     }
 
     public function getStatusLabel(): string {
-        return $this->status === 'Pending' ? 'Pending balance' : $this->status;
+        return $this->status;
     }
 
     public function getStatusTone(): string {
-        return $this->status === 'Cleared' ? 'success' : 'warning';
+        return match ($this->status) {
+            'Cleared' => 'success',
+            'Hold'    => 'danger',
+            default   => 'warning',
+        };
     }
 }

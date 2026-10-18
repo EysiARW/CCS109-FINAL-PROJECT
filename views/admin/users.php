@@ -6,11 +6,21 @@ use App\Utils\Icon;
  * @var array $users
  * @var bool $userAdded
  */
+$totalUsers   = count($users);
+$studentCount = 0;
+$staffCount   = 0;
+foreach ($users as $u) {
+    if (strtolower($u['role'] ?? '') === 'student') {
+        $studentCount++;
+    } else {
+        $staffCount++;
+    }
+}
 ?>
 <?= View::pageHeader(
     'User accounts',
     'Manage student and staff user access and account roles.',
-    "<button class='button primary' onclick=\"openModal('modal-add-user')\">Add user " . Icon::arrowRight() . "</button>"
+    "<button class='button primary' onclick=\"openModal('modal-add-user')\">Add user " . Icon::plus() . "</button>"
 ) ?>
 <?= View::dbStatusBanner() ?>
 
@@ -30,6 +40,24 @@ use App\Utils\Icon;
 </div>
 <?php endif; ?>
 
+<div class="grades-summary-strip">
+  <div class="grades-summary-item">
+    <span>Total Accounts</span>
+    <strong><?= $totalUsers ?></strong>
+    <small>Registered Portal Users</small>
+  </div>
+  <div class="grades-summary-item">
+    <span>Student Accounts</span>
+    <strong style="color:#26593b;"><?= $studentCount ?></strong>
+    <small>Enrolled University Students</small>
+  </div>
+  <div class="grades-summary-item">
+    <span>Staff &amp; Administrators</span>
+    <strong><?= $staffCount ?></strong>
+    <small>Registrar, Cashier &amp; Offices</small>
+  </div>
+</div>
+
 <section class="card table-card">
   <div class="toolbar">
     <div class="search-input"><?= Icon::search() ?><input type="text" id="user-search-input" placeholder="Search by ID, name, or email"></div>
@@ -40,13 +68,15 @@ use App\Utils\Icon;
         <option value="administrator">Administrator</option>
         <option value="registrar">Registrar</option>
         <option value="cashier">Cashier</option>
+        <option value="departmentstaff">Department Staff</option>
       </select>
       <?= Icon::chevronDown() ?>
     </div>
+    <span class="toolbar-caption" id="user-count-caption" style="margin-left:auto;"><?= $totalUsers ?> accounts</span>
   </div>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Program / Office</th><th>Status</th><th></th></tr></thead>
+      <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Program / Office</th><th>Status</th></tr></thead>
       <tbody id="users-table-body">
         <?php foreach ($users as $r): ?>
           <tr class="user-row" data-role="<?= strtolower(htmlspecialchars($r['role'])) ?>" data-text="<?= strtolower(htmlspecialchars($r['id'] . ' ' . $r['name'] . ' ' . $r['email'] . ' ' . $r['program'])) ?>">
@@ -58,11 +88,10 @@ use App\Utils\Icon;
             <td><?= htmlspecialchars($r['role']) ?></td>
             <td><?= htmlspecialchars($r['program']) ?></td>
             <td><?= View::statusBadge($r['status'], $r['status'] === 'Active' ? 'success' : 'danger') ?></td>
-            <td><button class="icon-button"><?= Icon::moreHorizontal() ?></button></td>
           </tr>
         <?php endforeach; ?>
         <tr id="user-empty-row" class="search-empty-row" style="display:none;">
-          <td colspan="6">
+          <td colspan="5">
             <?= Icon::search() ?>
             <strong>No user accounts found</strong>
             <span>Try searching with a different name, email, ID, or user role filter.</span>
@@ -77,6 +106,7 @@ use App\Utils\Icon;
 (function() {
   var search = document.getElementById('user-search-input');
   var roleSel = document.getElementById('user-role-select');
+  var countCap = document.getElementById('user-count-caption');
   var emptyRow = document.getElementById('user-empty-row');
   var rows = document.querySelectorAll('.user-row');
 
@@ -99,6 +129,9 @@ use App\Utils\Icon;
     if (emptyRow) {
       emptyRow.style.display = (matchCount === 0 && rows.length > 0) ? '' : 'none';
     }
+    if (countCap) {
+      countCap.textContent = matchCount + ' of ' + rows.length + ' accounts';
+    }
   }
 
   if (search) search.addEventListener('input', filterUsers);
@@ -119,14 +152,18 @@ use App\Utils\Icon;
       <div class="modal-grid">
         <div class="field"><label for="u_name">Full name</label><input type="text" id="u_name" name="name" placeholder="e.g. John Doe" required></div>
         <div class="field"><label for="u_email">Email address</label><input type="email" id="u_email" name="email" placeholder="name@cuyotech.edu" required></div>
-        <div class="field"><label for="u_role">Role</label>
-          <select id="u_role" name="role">
-            <option value="Student">Student</option>
-            <option value="Administrator">Administrator</option>
-            <option value="Registrar">Registrar</option>
-            <option value="Cashier">Cashier</option>
-            <option value="DepartmentStaff">Department Staff</option>
-          </select>
+        <div class="field">
+          <label for="u_role">Role</label>
+          <div class="select-wrap">
+            <select id="u_role" name="role">
+              <option value="Student">Student</option>
+              <option value="Administrator">Administrator</option>
+              <option value="Registrar">Registrar</option>
+              <option value="Cashier">Cashier</option>
+              <option value="DepartmentStaff">Department Staff</option>
+            </select>
+            <?= Icon::chevronDown() ?>
+          </div>
         </div>
         <div class="field"><label for="u_prog">Program / Office</label><input type="text" id="u_prog" name="program" placeholder="e.g. BS Information Technology"></div>
         <div class="field"><label for="u_pw">Temporary password</label><input type="password" id="u_pw" name="password" placeholder="Create temporary password"></div>

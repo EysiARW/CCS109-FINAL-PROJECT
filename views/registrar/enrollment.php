@@ -44,6 +44,24 @@ use App\Utils\Icon;
 </div>
 <?php endif; ?>
 
+<div class="grades-summary-strip">
+  <div class="grades-summary-item">
+    <span>Total Enrollments</span>
+    <strong><?= count($enrollments) ?></strong>
+    <small>Registered Student Subjects</small>
+  </div>
+  <div class="grades-summary-item">
+    <span>Active Students</span>
+    <strong><?= count($students) ?></strong>
+    <small>Eligible for Course Registration</small>
+  </div>
+  <div class="grades-summary-item">
+    <span>Available Courses</span>
+    <strong style="color:#26593b;"><?= count($courses) ?></strong>
+    <small>Curriculum Subject Catalog</small>
+  </div>
+</div>
+
 <section class="card table-card">
   <div class="toolbar">
     <div class="search-input">

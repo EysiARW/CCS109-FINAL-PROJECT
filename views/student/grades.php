@@ -11,6 +11,7 @@ $selectedYear = $_GET['ay'] ?? 'all';
 
 // Compute cumulative academic metrics
 $totalWeighted = 0;
+$gradedUnits = 0;
 $totalUnits = 0;
 $passedUnits = 0;
 $hasFailing = false;
@@ -23,6 +24,7 @@ foreach ($grades as $sem) {
             if ($e->grade && is_numeric($e->grade)) {
                 $g = (float)$e->grade;
                 $totalWeighted += ($g * $u);
+                $gradedUnits += $u;
                 if ($g <= 3.0) {
                     $passedUnits += $u;
                 } else {
@@ -30,14 +32,14 @@ foreach ($grades as $sem) {
                 }
             } elseif ($e->getRemarks() === 'Passed') {
                 $passedUnits += $u;
-            } elseif ($e->getRemarks() === 'Failed') {
+            } elseif (in_array($e->getRemarks(), ['Failed', 'Dropped'], true)) {
                 $hasFailing = true;
             }
         }
     }
 }
 
-$cgpa = ($totalUnits > 0 && $totalWeighted > 0) ? number_format($totalWeighted / $totalUnits, 2) : '1.65';
+$cgpa = ($gradedUnits > 0 && $totalWeighted > 0) ? number_format($totalWeighted / $gradedUnits, 2) : '1.65';
 $standing = ((float)$cgpa <= 1.75 && !$hasFailing) ? "Dean's Lister Candidate" : "Good Academic Standing";
 ?>
 <?= View::pageHeader(
@@ -96,7 +98,7 @@ $standing = ((float)$cgpa <= 1.75 && !$hasFailing) ? "Dean's Lister Candidate" :
             <td><?= htmlspecialchars($e->course->courseName ?? 'Subject') ?></td>
             <td><?= htmlspecialchars((string)($e->course->units ?? 3)) ?></td>
             <td><?= htmlspecialchars($e->grade ?: '—') ?></td>
-            <td><?= View::statusBadge($e->getRemarks(), $e->getRemarks() === 'In progress' ? 'warning' : ($e->getRemarks() === 'Failed' ? 'danger' : 'success')) ?></td>
+            <td><?= View::statusBadge($e->getRemarks(), $e->getStatusTone()) ?></td>
           </tr>
         <?php endforeach; ?>
       </tbody>
@@ -119,7 +121,7 @@ $standing = ((float)$cgpa <= 1.75 && !$hasFailing) ? "Dean's Lister Candidate" :
             <td><?= htmlspecialchars($e->course->courseName ?? 'Subject') ?></td>
             <td><?= htmlspecialchars((string)($e->course->units ?? 3)) ?></td>
             <td><?= htmlspecialchars($e->grade ?: '—') ?></td>
-            <td><?= View::statusBadge($e->getRemarks(), $e->getRemarks() === 'In progress' ? 'warning' : ($e->getRemarks() === 'Failed' ? 'danger' : 'success')) ?></td>
+            <td><?= View::statusBadge($e->getRemarks(), $e->getStatusTone()) ?></td>
           </tr>
         <?php endforeach; ?>
       </tbody>
