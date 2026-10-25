@@ -189,7 +189,7 @@ function confirmDropEnrollment(form, studentName, courseCode) {
 
 
 // Initialize searchable student combobox in enroll modal
-(function() {
+document.addEventListener('DOMContentLoaded', function() {
   var wrap = document.getElementById('enr-student-combobox');
   if (!wrap) return;
   var input = document.getElementById('enr_student_input');
@@ -333,7 +333,7 @@ function confirmDropEnrollment(form, studentName, courseCode) {
       }
     });
   }
-})();
+});
 </script>
 
 <!-- Enroll Student Modal -->

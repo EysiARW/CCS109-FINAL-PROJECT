@@ -492,6 +492,7 @@ function renderApp(requestedPage) {
   if (!session) {
     document.title = 'Sign in — CuyoTech SSIS';
     appShell.style.display = 'none';
+    document.getElementById('content-inner').innerHTML = '';
     authView.style.display = 'block';
     return;
   }
@@ -958,9 +959,9 @@ function getReqFee(docType, copies) {
 
 function getReqStatusMeta(status) {
   const s = String(status || 'Pending');
-  if (s === 'Pending') return ['Awaiting payment', 'warning', 'Mark as paid'];
-  if (s === 'Processing') return ['Processing', 'warning', 'Mark as ready'];
-  if (s === 'Ready for release' || s === 'Ready') return ['Ready for release', 'success', 'Release'];
+  if (s === 'Pending') return ['Payment pending', 'pending', 'Confirm payment'];
+  if (s === 'Processing') return ['Processing', 'warning', 'Mark ready'];
+  if (s === 'Ready for release' || s === 'Ready') return ['Ready for release', 'success', 'Mark released'];
   if (s === 'Released') return ['Released', 'success', 'Completed'];
   if (s === 'Cancelled') return ['Cancelled', 'danger', 'Completed'];
   if (s === 'Rejected') return ['Rejected', 'danger', 'Completed'];
@@ -2400,9 +2401,9 @@ function filterAdminRequests() {
 function advanceRequestStatus(reqId, action) {
   const r = store.requests.find(item => item.requestId === reqId);
   if (r) {
-    if (action === 'Mark as paid') r.status = 'Processing';
-    else if (action === 'Mark as ready') r.status = 'Ready for release';
-    else if (action === 'Release') r.status = 'Released';
+    if (action === 'Confirm payment') r.status = 'Processing';
+    else if (action === 'Mark ready') r.status = 'Ready for release';
+    else if (action === 'Mark released') r.status = 'Released';
     saveStore();
   }
   flashAlert = { type: 'success', html: '<strong>Request updated successfully!</strong> Status modification recorded.' };

@@ -26,6 +26,12 @@ class AuthService {
         // 1. Try student
         $student = $this->studentRepo->findByIdOrEmail($identifier);
         if ($student) {
+            if (strcasecmp($student->status, 'Deactivated') === 0) {
+                return [
+                    'success' => false,
+                    'message' => 'This student account is currently deactivated. Please contact the Registrar.',
+                ];
+            }
             if ($this->verifyPassword($password, $student->passwordHash)) {
                 return [
                     'success'    => true,

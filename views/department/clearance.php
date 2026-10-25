@@ -214,7 +214,7 @@ foreach ($clearances as $cl) {
 })();
 
 // Initialize searchable student combobox in clearance modal
-(function() {
+document.addEventListener('DOMContentLoaded', function() {
   var wrap = document.getElementById('cl-student-combobox');
   if (!wrap) return;
   var input = document.getElementById('cl_student_input');
@@ -331,7 +331,7 @@ foreach ($clearances as $cl) {
       }
     });
   }
-})();
+});
 </script>
 
 <!-- Add Clearance Modal -->

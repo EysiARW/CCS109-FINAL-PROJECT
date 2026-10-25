@@ -135,7 +135,7 @@ use App\Utils\Icon;
 
 
 // Initialize searchable student combobox in record payment modal
-(function() {
+document.addEventListener('DOMContentLoaded', function() {
   var wrap = document.getElementById('pay-student-combobox');
   if (!wrap) return;
   var input = document.getElementById('pay_student_input');
@@ -279,7 +279,7 @@ use App\Utils\Icon;
       }
     });
   }
-})();
+});
 </script>
 
 <!-- Record Payment Modal -->
