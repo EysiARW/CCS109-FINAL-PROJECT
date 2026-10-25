@@ -6,6 +6,17 @@ No Node.js, no TypeScript, no npm, and no build steps required.
 
 ---
 
+## 🌐 Live Interactive Demo (GitHub Pages)
+
+Experience the live system directly in your browser without requiring a local PHP/MySQL or XAMPP setup:  
+👉 **[Launch CuyoTech SSIS Live Showcase](https://eysiarw.github.io/CCS109-FINAL-PROJECT/)**
+
+- **Quick Persona Switcher**: Instantly switch between Student (Juan / Maria), Registrar (M. Santiago), Cashier (Pedro Reyes), Department Staff, and Administrator (Ana Reyes).
+- **Interactive Modules**: Test document requesting with dynamic fee calculation, grade encoding, payment recording with printable official receipts, and departmental clearance.
+- **System Specifications**: Built-in 3NF relational database schema viewer, QA test report (36/36 passed), and 15 UI/UX high-resolution wireframe screens.
+
+---
+
 ## 📁 Project Structure
 
 ```

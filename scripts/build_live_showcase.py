@@ -1,0 +1,2056 @@
+#!/usr/bin/env python3
+"""
+CuyoTech SSIS — Live Showcase Generator for GitHub Pages
+Generates an interactive, zero-dependency client-side application of the
+Student Services Information System, enabling instant testing on GitHub Pages.
+"""
+
+import os
+import json
+
+HTML_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CuyoTech University — Student Services Information System (SSIS) Live Showcase</title>
+  <link rel="icon" type="image/png" href="CuyoTech_University_Logo.png">
+  <link rel="stylesheet" href="assets/style.css">
+  <style>
+    /* ── Live Showcase Demo Bar ── */
+    .showcase-bar {
+      background: #18231c;
+      color: #e5ece7;
+      padding: 8px 16px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-bottom: 2px solid #52796f;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .showcase-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .showcase-brand span.live-badge {
+      background: #26593b;
+      color: #d8f3e5;
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .showcase-brand span.live-badge::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #34d399;
+      animation: pulse-dot 1.8s infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    .showcase-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .persona-select {
+      background: #233429;
+      color: #ffffff;
+      border: 1px solid #405f54;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+    }
+    .persona-select:focus {
+      border-color: #84a98c;
+    }
+    .showcase-btn {
+      background: #2e4437;
+      color: #ffffff;
+      border: 1px solid #4e6f62;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .showcase-btn:hover {
+      background: #405f54;
+      border-color: #84a98c;
+      color: #ffffff;
+    }
+    .showcase-btn.active-tab {
+      background: #52796f;
+      border-color: #a3c4ab;
+      font-weight: 600;
+    }
+
+    /* ── Toast Notifications ── */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast-msg {
+      pointer-events: auto;
+      background: #18231c;
+      color: #ffffff;
+      border-left: 4px solid #52796f;
+      padding: 12px 18px;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      font-size: 13.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideInToast 0.25s ease-out;
+      max-width: 380px;
+    }
+    .toast-msg.toast-success { border-left-color: #34d399; }
+    .toast-msg.toast-error { border-left-color: #f87171; }
+    @keyframes slideInToast {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* ── Modals & Overlays ── */
+    .app-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(18, 22, 20, 0.65);
+      backdrop-filter: blur(3px);
+      z-index: 2000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .app-modal {
+      background: #ffffff;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 580px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+      border: 1px solid #cad7cf;
+      padding: 24px;
+    }
+    .app-modal-large { max-width: 860px; }
+    .modal-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e2ece5;
+      padding-bottom: 14px;
+      margin-bottom: 18px;
+    }
+    .modal-hdr h3 { margin: 0; font-size: 18px; color: #18231c; font-weight: 700; }
+    .close-modal-btn {
+      background: none;
+      border: none;
+      font-size: 20px;
+      color: #4e5f56;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px;
+    }
+    .close-modal-btn:hover { color: #18231c; }
+
+    /* ── Official Receipt Formatted Box ── */
+    .receipt-box {
+      border: 2px dashed #84a98c;
+      background: #fbfdfc;
+      padding: 24px;
+      border-radius: 8px;
+      font-family: 'Courier New', Courier, monospace;
+      color: #18231c;
+      margin: 16px 0;
+    }
+    .receipt-hdr {
+      text-align: center;
+      border-bottom: 1px dashed #cad7cf;
+      padding-bottom: 12px;
+      margin-bottom: 14px;
+    }
+    .receipt-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+    }
+    .receipt-table th, .receipt-table td {
+      padding: 6px 0;
+      text-align: left;
+    }
+    .receipt-table th:last-child, .receipt-table td:last-child {
+      text-align: right;
+    }
+
+    /* ── Gallery Grid ── */
+    .wireframe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      padding: 10px 0;
+    }
+    .wireframe-card {
+      background: #ffffff;
+      border: 1px solid #cad7cf;
+      border-radius: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .wireframe-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+      border-color: #52796f;
+    }
+    .wireframe-card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      object-position: top;
+      border-bottom: 1px solid #e2ece5;
+      background: #edf3ef;
+    }
+    .wireframe-card-body {
+      padding: 12px 14px;
+    }
+    .wireframe-card-body h4 {
+      margin: 0 0 6px 0;
+      font-size: 14px;
+      color: #18231c;
+    }
+    .wireframe-card-body p {
+      margin: 0;
+      font-size: 12px;
+      color: #4e5f56;
+      line-height: 1.4;
+    }
+
+    /* ── Tab Views ── */
+    .view-container { display: none; }
+    .view-container.active { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- ── Showcase Global Top Control Bar ── -->
+<div class="showcase-bar">
+  <div class="showcase-brand">
+    <img src="CuyoTech_University_Logo_sm.png" alt="Logo" width="22" height="22" style="border-radius:4px;">
+    <span>CuyoTech SSIS Live Demo</span>
+    <span class="live-badge">Online Engine</span>
+  </div>
+
+  <div class="showcase-controls">
+    <label for="persona-picker" style="font-size:12px;color:#a3c4ab;display:flex;align-items:center;gap:4px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Role Persona:
+    </label>
+    <select id="persona-picker" class="persona-select" onchange="switchPersona(this.value)">
+      <option value="student-juan">🎓 Student: Juan Dela Cruz (2021-00123)</option>
+      <option value="student-maria">🎓 Student: Maria Santos (2024-00412)</option>
+      <option value="registrar">📋 Registrar: M. Santiago (m.santiago)</option>
+      <option value="cashier">💵 Cashier: Pedro Reyes (cashier01)</option>
+      <option value="department">🏢 Dept Staff: Dr. J. Dela Cruz (dept.staff)</option>
+      <option value="admin">🛡️ Administrator: Ana Reyes (ana.reyes)</option>
+      <option value="login-screen">🔐 Sign In Portal View</option>
+    </select>
+
+    <button type="button" class="showcase-btn" onclick="openModal('modal-wireframes')" title="View all 15 high-res wireframe exports">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      Wireframes
+    </button>
+    <button type="button" class="showcase-btn" onclick="openModal('modal-schema')" title="View 3NF Database Schema Specifications">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      3NF Schema
+    </button>
+    <button type="button" class="showcase-btn" onclick="openModal('modal-qa')" title="Automated QA Test Suite Verification">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 13 4 8"/></svg>
+      QA Tests (36/36)
+    </button>
+    <button type="button" class="showcase-btn" onclick="resetDemoData()" title="Reset all LocalStorage state back to default seed data" style="color:#f87171;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><path d="M3 21v-5h5"/></svg>
+      Reset Data
+    </button>
+  </div>
+</div>
+
+<!-- ── Main App Shell ── -->
+<div class="app-shell" id="app-shell">
+  <!-- ── Dynamic Sidebar ── -->
+  <aside class="sidebar" id="app-sidebar">
+    <div class="brand">
+      <img src="CuyoTech_University_Logo_sm.png" alt="CuyoTech Seal" width="38" height="38" style="border-radius:6px;">
+      <div>
+        <strong>CuyoTech SSIS</strong>
+        <small>CuyoTech University</small>
+      </div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;padding-right:4px;" id="sidebar-nav-container">
+      <!-- Injected via JavaScript based on role -->
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="user-chip" id="sidebar-user-chip">
+        <div class="avatar" id="sidebar-user-avatar">JD</div>
+        <div style="flex:1;min-width:0;">
+          <strong id="sidebar-user-name" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;">Juan Dela Cruz</strong>
+          <small id="sidebar-user-subtitle">Student · 2021-00123</small>
+        </div>
+      </div>
+      <button type="button" class="sign-out" onclick="switchPersona('login-screen')" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;font-family:inherit;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── Main Dynamic Content Area ── -->
+  <main class="main-content">
+    <div class="mobile-topbar">
+      <div class="brand">
+        <img src="CuyoTech_University_Logo_sm.png" alt="Logo" width="32" height="32" style="border-radius:4px;">
+        <strong>CuyoTech SSIS</strong>
+      </div>
+      <button type="button" onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Toggle navigation">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="content-inner" id="page-content-area">
+      <!-- Dynamic Views Injected Here -->
+    </div>
+  </main>
+</div>
+
+<!-- ── Login View Container (Replaces App Shell when active) ── -->
+<div id="login-screen-view" style="display:none;">
+  <main class="login-page">
+    <section class="login-brand-panel">
+      <div class="brand">
+        <img src="CuyoTech_University_Logo.png" alt="CuyoTech" width="56" height="56" style="border-radius:8px;">
+        <div>
+          <strong style="font-size:22px;color:#fff;">CuyoTech University</strong>
+          <small style="color:#a3c4ab;font-size:13px;">Student Services Information System</small>
+        </div>
+      </div>
+      <div class="login-message" style="margin-top:40px;">
+        <p class="eyebrow" style="color:#84a98c;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Student Services Information System</p>
+        <h1 style="color:#fff;font-size:36px;font-weight:800;line-height:1.2;margin:12px 0 16px 0;">Skip the line.<br>Do it online.</h1>
+        <p style="color:#cbd7cf;font-size:15px;line-height:1.6;">Access term grades, request school documents, process clearance, and manage student accounts seamlessly.</p>
+      </div>
+      <span class="login-version" style="margin-top:auto;color:#84a98c;font-size:12px;">CuyoTech University · Academic Year 2025–2026</span>
+    </section>
+
+    <section class="login-form-panel">
+      <div class="login-form-wrap" style="max-width:420px;width:100%;margin:auto;padding:24px;">
+        <div class="login-heading" style="margin-bottom:24px;">
+          <h2 style="font-size:24px;font-weight:700;color:#18231c;margin:0 0 6px 0;">Sign in</h2>
+          <p style="color:#4e5f56;font-size:14px;margin:0;">Use your CuyoTech credentials or select a quick demo account.</p>
+        </div>
+
+        <!-- Quick Login Helper Pills -->
+        <div style="background:#edf3ef;border:1px solid #cad7cf;border-radius:8px;padding:12px;margin-bottom:20px;">
+          <span style="font-size:11.5px;font-weight:700;color:#354f46;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">Quick Demo One-Click Sign In:</span>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            <button type="button" class="button outline small" onclick="quickFillLogin('2021-00123','student-juan')">Juan (Student)</button>
+            <button type="button" class="button outline small" onclick="quickFillLogin('m.santiago','registrar')">M. Santiago (Registrar)</button>
+            <button type="button" class="button outline small" onclick="quickFillLogin('cashier01','cashier')">Cashier 01</button>
+            <button type="button" class="button outline small" onclick="quickFillLogin('dept.staff','department')">Dept Staff</button>
+            <button type="button" class="button outline small" onclick="quickFillLogin('ana.reyes','admin')">Ana Reyes (Admin)</button>
+          </div>
+        </div>
+
+        <form id="interactive-login-form" onsubmit="handleLoginSubmit(event)">
+          <div class="field" style="margin-bottom:16px;">
+            <label for="login-input-id" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#18231c;">Student ID or Username</label>
+            <input type="text" id="login-input-id" class="input-text" placeholder="e.g. 2021-00123 or ana.reyes" value="2021-00123" required style="width:100%;padding:10px 12px;border:1px solid #cad7cf;border-radius:6px;font-size:14px;">
+          </div>
+          <div class="field" style="margin-bottom:20px;">
+            <label for="login-input-pw" style="display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#18231c;">Password</label>
+            <div style="position:relative;">
+              <input type="password" id="login-input-pw" class="input-text" value="password123" required style="width:100%;padding:10px 12px;border:1px solid #cad7cf;border-radius:6px;font-size:14px;">
+              <button type="button" onclick="togglePasswordVisibility('login-input-pw')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:#52796f;font-size:12px;cursor:pointer;font-weight:600;">Show</button>
+            </div>
+            <small style="display:block;margin-top:4px;color:#4e5f56;font-size:12px;">Default seeded password: <code>password123</code></small>
+          </div>
+          <button type="submit" class="button primary full" style="width:100%;padding:12px;font-size:15px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;">
+            Sign in
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ── Modals Collection ── -->
+
+<!-- 1. New Document Request Modal -->
+<div id="modal-new-doc-request" class="app-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeModal('modal-new-doc-request')">
+  <div class="app-modal">
+    <div class="modal-hdr">
+      <div>
+        <h3>New Document Request</h3>
+        <p style="margin:2px 0 0;font-size:13px;color:#4e5f56;">Request official university academic credentials.</p>
+      </div>
+      <button type="button" class="close-modal-btn" onclick="closeModal('modal-new-doc-request')">&times;</button>
+    </div>
+    <form onsubmit="handleNewDocRequest(event)">
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Document Type</label>
+        <select id="req-doc-type" class="select-input" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;" onchange="updateDocPrice()">
+          <option value="Transcript of Records" data-fee="150">Transcript of Records (TOR) — ₱150.00</option>
+          <option value="Certificate of Registration" data-fee="75">Certificate of Registration (COR) — ₱75.00</option>
+          <option value="Good Moral Certificate" data-fee="50">Certificate of Good Moral Character — ₱50.00</option>
+          <option value="Certificate of Grades" data-fee="50">Certificate of Grades — ₱50.00</option>
+          <option value="Honorable Dismissal" data-fee="200">Honorable Dismissal — ₱200.00</option>
+        </select>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Number of Copies</label>
+        <input type="number" id="req-copies" value="1" min="1" max="10" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;" onchange="updateDocPrice()" oninput="updateDocPrice()">
+      </div>
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Purpose of Request</label>
+        <input type="text" id="req-purpose" placeholder="e.g. Scholarship Application, Employment, Board Exam" required style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+      </div>
+      <div style="background:#edf3ef;border:1px solid #badbca;padding:12px;border-radius:6px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;color:#26593b;font-weight:600;">Total Document Fee:</span>
+        <strong id="req-total-price" style="font-size:17px;color:#26593b;">₱150.00</strong>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="button outline" onclick="closeModal('modal-new-doc-request')">Cancel</button>
+        <button type="submit" class="button primary">Submit Request</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 2. Enroll Student Modal (Registrar) -->
+<div id="modal-enroll-student" class="app-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeModal('modal-enroll-student')">
+  <div class="app-modal">
+    <div class="modal-hdr">
+      <div>
+        <h3>Enroll Student in Course</h3>
+        <p style="margin:2px 0 0;font-size:13px;color:#4e5f56;">Register a student into an academic course roster.</p>
+      </div>
+      <button type="button" class="close-modal-btn" onclick="closeModal('modal-enroll-student')">&times;</button>
+    </div>
+    <form onsubmit="handleEnrollStudent(event)">
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Select Student</label>
+        <select id="enroll-student-id" class="select-input" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;" required>
+          <option value="1">2021-00123 — Juan Dela Cruz (BSIT 3)</option>
+          <option value="2">2024-00412 — Maria Santos (BSA 1)</option>
+          <option value="3">2020-00087 — Paolo Gomez (BSIT 4)</option>
+        </select>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Select Course</label>
+        <select id="enroll-course-id" class="select-input" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;" required>
+          <option value="1">IT 311 — Web Systems and Technologies (3 Units)</option>
+          <option value="2">IT 312 — Database Management Systems (3 Units)</option>
+          <option value="3">IT 313 — Information Assurance (3 Units)</option>
+          <option value="4">IT 314 — Systems Analysis and Design (3 Units)</option>
+          <option value="5">IT 221 — Object-Oriented Programming (3 Units)</option>
+          <option value="6">IT 222 — Data Structures and Algorithms (3 Units)</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Academic Year</label>
+          <select id="enroll-sy" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+            <option value="2025-2026">2025-2026</option>
+            <option value="2024-2025">2024-2025</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Semester</label>
+          <select id="enroll-sem" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+            <option value="1st">1st Semester</option>
+            <option value="2nd">2nd Semester</option>
+            <option value="Summer">Midyear / Summer</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="button outline" onclick="closeModal('modal-enroll-student')">Cancel</button>
+        <button type="submit" class="button primary">Confirm Enrollment</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 3. Record Payment Modal (Cashier) -->
+<div id="modal-record-payment" class="app-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeModal('modal-record-payment')">
+  <div class="app-modal">
+    <div class="modal-hdr">
+      <div>
+        <h3>Record Student Payment</h3>
+        <p style="margin:2px 0 0;font-size:13px;color:#4e5f56;">Process counter collections and issue an Official Receipt (OR).</p>
+      </div>
+      <button type="button" class="close-modal-btn" onclick="closeModal('modal-record-payment')">&times;</button>
+    </div>
+    <form onsubmit="handleRecordPayment(event)">
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Select Student</label>
+        <select id="pay-student-id" class="select-input" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;" required>
+          <option value="1">2021-00123 — Juan Dela Cruz</option>
+          <option value="2">2024-00412 — Maria Santos</option>
+          <option value="3">2020-00087 — Paolo Gomez</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Payment Type</label>
+          <select id="pay-type" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+            <option value="Tuition">Tuition Fee</option>
+            <option value="Document Request">Document Request Fee</option>
+            <option value="Graduation Fee">Graduation Fee</option>
+            <option value="Laboratory Fee">Laboratory Fee</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Payment Method</label>
+          <select id="pay-mode" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+            <option value="Cash">Cash (Counter)</option>
+            <option value="GCash">GCash</option>
+            <option value="Maya">Maya</option>
+            <option value="Bank Transfer">LandBank / Bank Transfer</option>
+          </select>
+        </div>
+      </div>
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Amount Paid (₱)</label>
+        <input type="number" id="pay-amount" step="0.01" min="10" placeholder="e.g. 1500.00" required style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="button outline" onclick="closeModal('modal-record-payment')">Cancel</button>
+        <button type="submit" class="button primary">Generate Receipt & Post</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 4. Official Receipt (OR) Printable Modal -->
+<div id="modal-view-receipt" class="app-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeModal('modal-view-receipt')">
+  <div class="app-modal">
+    <div class="modal-hdr">
+      <div>
+        <h3>Official University Receipt</h3>
+        <p style="margin:2px 0 0;font-size:13px;color:#4e5f56;">Republic of the Philippines · CuyoTech University</p>
+      </div>
+      <button type="button" class="close-modal-btn" onclick="closeModal('modal-view-receipt')">&times;</button>
+    </div>
+    <div class="receipt-box" id="printable-receipt-content">
+      <div class="receipt-hdr">
+        <strong style="font-size:16px;">CUYOTECH UNIVERSITY</strong><br>
+        <small>Office of the University Cashier · Puerto Princesa City</small><br>
+        <strong style="font-size:14px;color:#52796f;display:inline-block;margin-top:6px;">OFFICIAL RECEIPT</strong><br>
+        <span id="or-modal-number" style="font-weight:bold;color:#18231c;">OR-2025-0182</span>
+      </div>
+      <div style="font-size:13px;line-height:1.6;margin-bottom:12px;">
+        <div><strong>Date:</strong> <span id="or-modal-date">2025-09-15</span></div>
+        <div><strong>Received From:</strong> <span id="or-modal-student">Juan Dela Cruz (2021-00123)</span></div>
+        <div><strong>Program:</strong> <span id="or-modal-program">BS Information Technology</span></div>
+        <div><strong>Payment Method:</strong> <span id="or-modal-mode">Cash</span></div>
+      </div>
+      <table class="receipt-table">
+        <thead>
+          <tr style="border-bottom:1px solid #cad7cf;">
+            <th>Particulars</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="or-modal-particulars">Tuition Assessment</td>
+            <td id="or-modal-amount">₱1,250.00</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr style="border-top:1px dashed #cad7cf;font-weight:bold;">
+            <td>TOTAL AMOUNT PAID:</td>
+            <td id="or-modal-total">₱1,250.00</td>
+          </tr>
+        </tfoot>
+      </table>
+      <div style="margin-top:20px;text-align:right;font-size:12px;">
+        <div style="display:inline-block;border-top:1px solid #18231c;padding-top:4px;min-width:180px;text-align:center;">
+          <strong>Pedro Reyes</strong><br>
+          <small>University Cashier / Authorized Officer</small>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;">
+      <button type="button" class="button outline" onclick="window.print()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print Receipt
+      </button>
+      <button type="button" class="button primary" onclick="closeModal('modal-view-receipt')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- 5. Create User Account Modal (Admin) -->
+<div id="modal-create-user" class="app-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeModal('modal-create-user')">
+  <div class="app-modal">
+    <div class="modal-hdr">
+      <div>
+        <h3>Create User Account</h3>
+        <p style="margin:2px 0 0;font-size:13px;color:#4e5f56;">Add a new student or administrative staff account.</p>
+      </div>
+      <button type="button" class="close-modal-btn" onclick="closeModal('modal-create-user')">&times;</button>
+    </div>
+    <form onsubmit="handleCreateUser(event)">
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Account Role</label>
+        <select id="new-user-role" class="select-input" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;" onchange="toggleUserFormFields(this.value)">
+          <option value="Student">Student</option>
+          <option value="Registrar">Registrar Staff</option>
+          <option value="Cashier">Cashier Staff</option>
+          <option value="DepartmentStaff">Department Staff</option>
+          <option value="Administrator">Administrator (SuperAdmin)</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">First Name</label>
+          <input type="text" id="new-user-fn" required style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Last Name</label>
+          <input type="text" id="new-user-ln" required style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+        </div>
+      </div>
+      <div style="margin-bottom:14px;">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;" id="new-user-id-label">Student ID Number</label>
+        <input type="text" id="new-user-identifier" placeholder="e.g. 2025-00999" required style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+      </div>
+      <div style="margin-bottom:14px;" id="student-extra-fields">
+        <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Degree Program</label>
+        <select id="new-user-program" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+          <option value="BS Information Technology">BS Information Technology</option>
+          <option value="BS Computer Science">BS Computer Science</option>
+          <option value="BS Accountancy">BS Accountancy</option>
+          <option value="BS Business Administration">BS Business Administration</option>
+        </select>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;">
+        <button type="button" class="button outline" onclick="closeModal('modal-create-user')">Cancel</button>
+        <button type="submit" class="button primary">Create Account</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- 6. Wireframes Gallery Modal -->
+<div id="modal-wireframes" class="app-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeModal('modal-wireframes')">
+  <div class="app-modal app-modal-large">
+    <div class="modal-hdr">
+      <div>
+        <h3>System UI/UX Wireframe Catalog (15 Screens)</h3>
+        <p style="margin:2px 0 0;font-size:13px;color:#4e5f56;">High-resolution wireframe captures and Figma specifications.</p>
+      </div>
+      <button type="button" class="close-modal-btn" onclick="closeModal('modal-wireframes')">&times;</button>
+    </div>
+    <div class="wireframe-grid" id="wireframes-catalog-container">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+</div>
+
+<!-- 7. Database 3NF Schema Modal -->
+<div id="modal-schema" class="app-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeModal('modal-schema')">
+  <div class="app-modal app-modal-large">
+    <div class="modal-hdr">
+      <div>
+        <h3>Normalized 3NF Relational Database Schema</h3>
+        <p style="margin:2px 0 0;font-size:13px;color:#4e5f56;">8 Normalized Entities with Crow's Foot Relational Constraints (`ssis_schema.sql`).</p>
+      </div>
+      <button type="button" class="close-modal-btn" onclick="closeModal('modal-schema')">&times;</button>
+    </div>
+    <div style="font-size:13.5px;color:#1e2621;line-height:1.6;">
+      <div style="background:#edf3ef;border:1px solid #badbca;padding:12px 16px;border-radius:8px;margin-bottom:16px;">
+        <strong>Normalization Compliance Summary:</strong>
+        <p style="margin:4px 0 0;font-size:12.5px;">✓ <strong>1NF:</strong> Atomic columns, unique primary keys, zero repeating attribute groups.<br>
+        ✓ <strong>2NF:</strong> Full functional dependency on candidate keys; no partial composite key dependencies.<br>
+        ✓ <strong>3NF:</strong> Zero transitive non-key dependencies. Department details, Course offerings, and Clearance states isolated into dedicated relation tables.</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:12px;">
+        <div style="background:#ffffff;border:1px solid #cad7cf;border-radius:8px;padding:12px;">
+          <h4 style="margin:0 0 4px;color:#18231c;">1. Department</h4>
+          <code style="font-size:11.5px;color:#52796f;">(PK: DepartmentID)</code>
+          <p style="font-size:12px;margin:4px 0 0;color:#4e5f56;">Colleges and operational university offices.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #cad7cf;border-radius:8px;padding:12px;">
+          <h4 style="margin:0 0 4px;color:#18231c;">2. Student</h4>
+          <code style="font-size:11.5px;color:#52796f;">(PK: StudentID, UQ: Email)</code>
+          <p style="font-size:12px;margin:4px 0 0;color:#4e5f56;">Student credentials, program, address, bcrypt hash.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #cad7cf;border-radius:8px;padding:12px;">
+          <h4 style="margin:0 0 4px;color:#18231c;">3. AdminUser</h4>
+          <code style="font-size:11.5px;color:#52796f;">(PK: AdminID, FK: DepartmentID)</code>
+          <p style="font-size:12px;margin:4px 0 0;color:#4e5f56;">Institutional staff with role-based access.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #cad7cf;border-radius:8px;padding:12px;">
+          <h4 style="margin:0 0 4px;color:#18231c;">4. Course</h4>
+          <code style="font-size:11.5px;color:#52796f;">(PK: CourseID, FK: DepartmentID)</code>
+          <p style="font-size:12px;margin:4px 0 0;color:#4e5f56;">Academic curriculum subjects & credit units.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #cad7cf;border-radius:8px;padding:12px;">
+          <h4 style="margin:0 0 4px;color:#18231c;">5. Enrollment</h4>
+          <code style="font-size:11.5px;color:#52796f;">(PK: EnrollmentID, FK: StudentID, CourseID)</code>
+          <p style="font-size:12px;margin:4px 0 0;color:#4e5f56;">Many-to-many link resolving grades and terms.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #cad7cf;border-radius:8px;padding:12px;">
+          <h4 style="margin:0 0 4px;color:#18231c;">6. Payment</h4>
+          <code style="font-size:11.5px;color:#52796f;">(PK: PaymentID, FK: StudentID, UQ: ORNumber)</code>
+          <p style="font-size:12px;margin:4px 0 0;color:#4e5f56;">Official receipt counter cashier transactions.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #cad7cf;border-radius:8px;padding:12px;">
+          <h4 style="margin:0 0 4px;color:#18231c;">7. DocumentRequest</h4>
+          <code style="font-size:11.5px;color:#52796f;">(PK: RequestID, FK: StudentID, AdminID)</code>
+          <p style="font-size:12px;margin:4px 0 0;color:#4e5f56;">Fulfillment lifecycle of TOR, COR, and Certifications.</p>
+        </div>
+        <div style="background:#ffffff;border:1px solid #cad7cf;border-radius:8px;padding:12px;">
+          <h4 style="margin:0 0 4px;color:#18231c;">8. Clearance</h4>
+          <code style="font-size:11.5px;color:#52796f;">(PK: ClearanceID, FK: StudentID, DepartmentID)</code>
+          <p style="font-size:12px;margin:4px 0 0;color:#4e5f56;">Student-to-department clearance hold/clear records.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8. QA Test Suite Results Modal -->
+<div id="modal-qa" class="app-modal-backdrop" style="display:none;" onclick="if(event.target===this)closeModal('modal-qa')">
+  <div class="app-modal app-modal-large">
+    <div class="modal-hdr">
+      <div>
+        <h3>Automated Quality Assurance & Security Test Report</h3>
+        <p style="margin:2px 0 0;font-size:13px;color:#4e5f56;">Automated execution results via `scripts/run_automated_tests.php`.</p>
+      </div>
+      <button type="button" class="close-modal-btn" onclick="closeModal('modal-qa')">&times;</button>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:#ebf5ee;border:1px solid #badbca;padding:14px 18px;border-radius:8px;margin-bottom:16px;">
+        <div>
+          <strong style="font-size:16px;color:#26593b;">Overall Test Pass Rate: 100.0%</strong>
+          <p style="margin:3px 0 0;font-size:13px;color:#354f46;">36 of 36 unit, integration, and security test cases successfully passed.</p>
+        </div>
+        <span class="badge status-cleared" style="font-size:14px;padding:6px 12px;">All Passed</span>
+      </div>
+      <div id="qa-test-list-container" style="max-height:400px;overflow-y:auto;border:1px solid #cad7cf;border-radius:6px;">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<script>
+/* =====================================================================
+ * CuyoTech SSIS Client-Side Live State Engine
+ * ===================================================================== */
+
+const DEFAULT_DATA = {
+  students: [
+    { id: 1, studentId: "2021-00123", firstName: "Juan", lastName: "Dela Cruz", email: "juan.delacruz@cuyotech.edu", program: "BS Information Technology", yearLevel: 3, status: "Active", address: "Brgy. San Pedro, Puerto Princesa City, Palawan 5300", contact: "+63 912 345 6789" },
+    { id: 2, studentId: "2024-00412", firstName: "Maria", lastName: "Santos", email: "2024-00412@cuyotech.edu", program: "BS Accountancy", yearLevel: 1, status: "Active", address: "Brgy. Bancao-Bancao, Puerto Princesa City, Palawan 5300", contact: "+63 920 987 6543" },
+    { id: 3, studentId: "2020-00087", firstName: "Paolo", lastName: "Gomez", email: "2020-00087@cuyotech.edu", program: "BS Information Technology", yearLevel: 4, status: "Deactivated", address: "Brgy. San Jose, Puerto Princesa City, Palawan 5300", contact: "+63 917 555 4321" }
+  ],
+  adminUsers: [
+    { id: 1, username: "ana.reyes", name: "Ana Reyes", role: "Administrator", department: "Registrar's Office" },
+    { id: 2, username: "m.santiago", name: "M. Santiago", role: "Registrar", department: "Registrar's Office" },
+    { id: 3, username: "cashier01", name: "Pedro Reyes", role: "Cashier", department: "Cashier's Office" },
+    { id: 4, username: "dept.staff", name: "Dr. Juan Dela Cruz", role: "DepartmentStaff", department: "College of Computing Studies" }
+  ],
+  courses: [
+    { id: 1, code: "IT 311", name: "Web Systems and Technologies", units: 3, dept: "College of Computing Studies", prof: "Prof. R. Bautista", schedule: "MW 09:00 - 10:30 AM", room: "CS-Lab 2" },
+    { id: 2, code: "IT 312", name: "Database Management Systems", units: 3, dept: "College of Computing Studies", prof: "Engr. A. Aquino", schedule: "TTh 10:30 - 12:00 PM", room: "CS-Lab 1" },
+    { id: 3, code: "IT 313", name: "Information Assurance", units: 3, dept: "College of Computing Studies", prof: "Dr. C. Baltazar", schedule: "Fri 01:00 - 04:00 PM", room: "CS-204" },
+    { id: 4, code: "IT 314", name: "Systems Analysis and Design", units: 3, dept: "College of Computing Studies", prof: "Prof. M. Capoy", schedule: "MW 01:30 - 03:00 PM", room: "CS-201" },
+    { id: 5, code: "IT 221", name: "Object-Oriented Programming", units: 3, dept: "College of Computing Studies", prof: "Prof. E. Balbero", schedule: "TTh 01:00 - 02:30 PM", room: "CS-Lab 3" },
+    { id: 6, code: "IT 222", name: "Data Structures and Algorithms", units: 3, dept: "College of Computing Studies", prof: "Prof. R. Bautista", schedule: "MW 10:30 - 12:00 PM", room: "CS-Lab 2" }
+  ],
+  enrollments: [
+    { id: 1, studentId: 1, courseId: 1, sy: "2025-2026", sem: "1st", grade: "1.25" },
+    { id: 2, studentId: 1, courseId: 2, sy: "2025-2026", sem: "1st", grade: "1.50" },
+    { id: 3, studentId: 1, courseId: 3, sy: "2025-2026", sem: "1st", grade: "1.75" },
+    { id: 4, studentId: 1, courseId: 4, sy: "2025-2026", sem: "1st", grade: null },
+    { id: 5, studentId: 1, courseId: 5, sy: "2024-2025", sem: "2nd", grade: "1.75" },
+    { id: 6, studentId: 1, courseId: 6, sy: "2024-2025", sem: "2nd", grade: "2.00" },
+    { id: 7, studentId: 2, courseId: 1, sy: "2025-2026", sem: "1st", grade: "1.50" },
+    { id: 8, studentId: 2, courseId: 2, sy: "2025-2026", sem: "1st", grade: null }
+  ],
+  clearances: [
+    { id: 1, studentId: 1, deptName: "College of Computing Studies", status: "Cleared", dateCleared: "2025-09-28", remarks: "All requirements submitted" },
+    { id: 2, studentId: 1, deptName: "Cashier's Office", status: "Pending", dateCleared: null, remarks: "Pending 1st sem final balance verification" },
+    { id: 3, studentId: 1, deptName: "University Library", status: "Cleared", dateCleared: "2025-10-01", remarks: "No overdue books" },
+    { id: 4, studentId: 2, deptName: "College of Computing Studies", status: "Cleared", dateCleared: "2025-10-05", remarks: "Cleared" },
+    { id: 5, studentId: 2, deptName: "Cashier's Office", status: "Cleared", dateCleared: "2025-10-06", remarks: "Tuition fully settled" },
+    { id: 6, studentId: 3, deptName: "College of Computing Studies", status: "Hold", dateCleared: null, remarks: "Lacking 4th Year Capstone clearance form" }
+  ],
+  payments: [
+    { id: 1, studentId: 1, amount: 1250.00, date: "2025-09-15", orNumber: "OR-2025-0182", type: "Tuition", mode: "Cash" },
+    { id: 2, studentId: 2, amount: 3500.00, date: "2025-09-20", orNumber: "OR-2025-0199", type: "Tuition", mode: "GCash" },
+    { id: 3, studentId: 1, amount: 150.00, date: "2025-10-03", orNumber: "OR-2025-0210", type: "Document Request (TOR)", mode: "Counter Cash" }
+  ],
+  documentRequests: [
+    { id: 48, studentId: 1, type: "Transcript of Records", copies: 1, fee: 150.00, date: "2025-10-02", status: "Processing", admin: "M. Santiago" },
+    { id: 31, studentId: 1, type: "Certification", copies: 2, fee: 100.00, date: "2025-09-18", status: "Released", admin: "M. Santiago" },
+    { id: 24, studentId: 1, type: "Certificate of Registration", copies: 1, fee: 75.00, date: "2025-09-10", status: "Pending", admin: "Pending Assignment" },
+    { id: 52, studentId: 2, type: "Good Moral Certificate", copies: 1, fee: 50.00, date: "2025-10-12", status: "Processing", admin: "M. Santiago" }
+  ],
+  wireframes: [
+    { file: "01_Sign_In.png", title: "01. Authentication & Sign-In", desc: "Dual-role credentials, institutional branding, quick demo pills, and CSRF protection." },
+    { file: "02_Student_Profile.png", title: "02. Student Profile", desc: "Biodata, program & year verification, and self-service password update." },
+    { file: "03_Student_Grades.png", title: "03. Academic Grades & GPA", desc: "Term grade breakdown with automated real-time semester GPA calculation." },
+    { file: "04_Student_Subjects.png", title: "04. Enrolled Subjects", desc: "Class roster directory featuring units, schedules, rooms, and professors." },
+    { file: "05_Student_Document_Requests.png", title: "05. Document Requests", desc: "Request histories, pricing, copy counts, and fulfillment statuses." },
+    { file: "06_Student_New_Request_Modal.png", title: "06. New Request Modal", desc: "Interactive submission modal with dynamic price computation (₱50 - ₱150)." },
+    { file: "07_Registrar_Enrollment.png", title: "07. Registrar Enrollment", desc: "Student-to-course registration directory with academic term filters." },
+    { file: "08_Registrar_Enroll_Modal.png", title: "08. Course Enroll Modal", desc: "Enrollment dialogue allowing registrars to register students into courses." },
+    { file: "09_Registrar_Grades_Encoding.png", title: "09. Grades Encoding", desc: "Course-by-course grade entry interface with real-time pass/fail indicators." },
+    { file: "10_Cashier_Payments.png", title: "10. Cashier Counter Payments", desc: "Tuition and document fee collection ledger with OR tracking." },
+    { file: "11_Cashier_Record_Payment_Modal.png", title: "11. Record Payment Modal", desc: "Payment entry form generating automated Official Receipt numbers." },
+    { file: "12_Cashier_Official_Receipt.png", title: "12. Official Receipt View", desc: "Print-ready university official receipt with financial breakdown." },
+    { file: "13_Department_Clearance.png", title: "13. Department Clearance", desc: "Dean and department evaluation module with Cleared and Hold flags." },
+    { file: "14_Admin_User_Management.png", title: "14. Admin User Accounts", desc: "Comprehensive role-based user directory and account creation." },
+    { file: "15_Admin_Document_Requests.png", title: "15. Admin Request Fulfillment", desc: "Fulfillment queue with one-click status transitions." }
+  ]
+};
+
+// State Manager with LocalStorage
+function loadState() {
+  try {
+    const saved = localStorage.getItem("cuyotech_ssis_state");
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_DATA));
+}
+
+let appState = loadState();
+
+function saveState() {
+  try {
+    localStorage.setItem("cuyotech_ssis_state", JSON.stringify(appState));
+  } catch(e) {}
+}
+
+function resetDemoData() {
+  if (confirm("Reset all LocalStorage changes back to default seed data?")) {
+    localStorage.removeItem("cuyotech_ssis_state");
+    appState = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    showToast("Demo state successfully reset to original seed data.", "success");
+    renderCurrentPage();
+  }
+}
+
+// Current Persona & Navigation
+let currentPersonaKey = "student-juan";
+let currentPage = "profile";
+
+const PERSONAS = {
+  "student-juan": {
+    role: "Student",
+    name: "Juan Dela Cruz",
+    userId: "2021-00123",
+    studentRefId: 1,
+    initials: "JD",
+    defaultPage: "profile",
+    sections: [
+      {
+        heading: "Student Portal",
+        items: [
+          { id: "profile", label: "Profile", icon: iconUser() },
+          { id: "grades", label: "Grades", icon: iconGrad() },
+          { id: "subjects", label: "Subjects", icon: iconBook() }
+        ]
+      },
+      {
+        heading: "Document Request System",
+        items: [
+          { id: "requests", label: "Document requests", icon: iconFile() }
+        ]
+      }
+    ]
+  },
+  "student-maria": {
+    role: "Student",
+    name: "Maria Santos",
+    userId: "2024-00412",
+    studentRefId: 2,
+    initials: "MS",
+    defaultPage: "profile",
+    sections: [
+      {
+        heading: "Student Portal",
+        items: [
+          { id: "profile", label: "Profile", icon: iconUser() },
+          { id: "grades", label: "Grades", icon: iconGrad() },
+          { id: "subjects", label: "Subjects", icon: iconBook() }
+        ]
+      },
+      {
+        heading: "Document Request System",
+        items: [
+          { id: "requests", label: "Document requests", icon: iconFile() }
+        ]
+      }
+    ]
+  },
+  "registrar": {
+    role: "Registrar",
+    name: "M. Santiago",
+    userId: "m.santiago",
+    initials: "MS",
+    defaultPage: "enrollment",
+    sections: [
+      {
+        heading: "Registrar Module",
+        items: [
+          { id: "enrollment", label: "Enrollment", icon: iconCheckUser() },
+          { id: "grades-encoding", label: "Grades encoding", icon: iconEdit() }
+        ]
+      },
+      {
+        heading: "Document Request System",
+        items: [
+          { id: "admin-requests", label: "Document requests", icon: iconFile() }
+        ]
+      }
+    ]
+  },
+  "cashier": {
+    role: "Cashier",
+    name: "Pedro Reyes",
+    userId: "cashier01",
+    initials: "PR",
+    defaultPage: "payments",
+    sections: [
+      {
+        heading: "Cashier Module",
+        items: [
+          { id: "payments", label: "Payments", icon: iconCreditCard() },
+          { id: "receipts", label: "Receipts", icon: iconReceipt() }
+        ]
+      }
+    ]
+  },
+  "department": {
+    role: "DepartmentStaff",
+    name: "Dr. Juan Dela Cruz",
+    userId: "dept.staff",
+    initials: "JD",
+    defaultPage: "clearance",
+    sections: [
+      {
+        heading: "Department Module",
+        items: [
+          { id: "clearance", label: "Clearance processing", icon: iconShield() }
+        ]
+      }
+    ]
+  },
+  "admin": {
+    role: "Administrator",
+    name: "Ana Reyes",
+    userId: "ana.reyes",
+    initials: "AR",
+    defaultPage: "admin-users",
+    sections: [
+      {
+        heading: "Admin Module",
+        items: [
+          { id: "admin-users", label: "User accounts", icon: iconUsers() }
+        ]
+      },
+      {
+        heading: "Registrar Module",
+        items: [
+          { id: "enrollment", label: "Enrollment", icon: iconCheckUser() },
+          { id: "grades-encoding", label: "Grades encoding", icon: iconEdit() }
+        ]
+      },
+      {
+        heading: "Cashier Module",
+        items: [
+          { id: "payments", label: "Payments", icon: iconCreditCard() },
+          { id: "receipts", label: "Receipts", icon: iconReceipt() }
+        ]
+      },
+      {
+        heading: "Department Module",
+        items: [
+          { id: "clearance", label: "Clearance", icon: iconShield() }
+        ]
+      },
+      {
+        heading: "Document Request System",
+        items: [
+          { id: "admin-requests", label: "Document requests", icon: iconFile() }
+        ]
+      }
+    ]
+  }
+};
+
+function switchPersona(personaKey) {
+  currentPersonaKey = personaKey;
+  document.getElementById("persona-picker").value = personaKey;
+
+  if (personaKey === "login-screen") {
+    document.getElementById("app-shell").style.display = "none";
+    document.getElementById("login-screen-view").style.display = "block";
+    return;
+  }
+
+  document.getElementById("login-screen-view").style.display = "none";
+  document.getElementById("app-shell").style.display = "flex";
+
+  const persona = PERSONAS[personaKey];
+  currentPage = persona.defaultPage;
+
+  // Update Sidebar Profile
+  document.getElementById("sidebar-user-avatar").innerText = persona.initials;
+  document.getElementById("sidebar-user-name").innerText = persona.name;
+  document.getElementById("sidebar-user-subtitle").innerText = persona.role + " · " + persona.userId;
+
+  renderSidebarNav();
+  renderCurrentPage();
+  showToast("Switched to role persona: " + persona.name + " (" + persona.role + ")", "success");
+}
+
+function renderSidebarNav() {
+  const persona = PERSONAS[currentPersonaKey];
+  const container = document.getElementById("sidebar-nav-container");
+  let html = "";
+
+  persona.sections.forEach((sec, idx) => {
+    html += `<nav class="nav-group ${persona.role !== 'Student' ? 'admin-nav' : ''}" style="${idx > 0 ? 'margin-top:16px;' : ''}">`;
+    html += `<span class="nav-label">${sec.heading}</span>`;
+    sec.items.forEach(item => {
+      const active = (currentPage === item.id) ? 'active' : '';
+      html += `<a href="javascript:void(0)" onclick="navigateTo('${item.id}')" class="nav-item ${active}">${item.icon}${item.label}</a>`;
+    });
+    html += `</nav>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function navigateTo(pageId) {
+  currentPage = pageId;
+  renderSidebarNav();
+  renderCurrentPage();
+  document.querySelector('.sidebar').classList.remove('open');
+}
+
+// Page Renderers
+function renderCurrentPage() {
+  const area = document.getElementById("page-content-area");
+  const persona = PERSONAS[currentPersonaKey];
+
+  if (currentPage === "profile") {
+    area.innerHTML = getProfileHtml(persona);
+  } else if (currentPage === "grades") {
+    area.innerHTML = getGradesHtml(persona);
+  } else if (currentPage === "subjects") {
+    area.innerHTML = getSubjectsHtml(persona);
+  } else if (currentPage === "requests") {
+    area.innerHTML = getRequestsHtml(persona);
+  } else if (currentPage === "enrollment") {
+    area.innerHTML = getEnrollmentHtml();
+  } else if (currentPage === "grades-encoding") {
+    area.innerHTML = getGradesEncodingHtml();
+  } else if (currentPage === "payments") {
+    area.innerHTML = getPaymentsHtml();
+  } else if (currentPage === "receipts") {
+    area.innerHTML = getReceiptsHtml();
+  } else if (currentPage === "clearance") {
+    area.innerHTML = getClearanceHtml();
+  } else if (currentPage === "admin-users") {
+    area.innerHTML = getAdminUsersHtml();
+  } else if (currentPage === "admin-requests") {
+    area.innerHTML = getAdminRequestsHtml();
+  }
+}
+
+/* ── HTML Content Generators ── */
+
+function getProfileHtml(persona) {
+  const student = appState.students.find(s => s.id === persona.studentRefId) || appState.students[0];
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Student Profile</h1>
+        <p class="page-subtitle">View your student credentials, academic standing, and update your password.</p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:20px;">
+      <!-- Profile Card -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:16px;padding-bottom:16px;border-bottom:1px solid #cad7cf;margin-bottom:18px;">
+          <div style="width:64px;height:64px;border-radius:50%;background:#354f46;color:#ffffff;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;">
+            ${student.firstName[0]}${student.lastName[0]}
+          </div>
+          <div>
+            <h2 style="font-size:20px;margin:0 0 4px;color:#18231c;">${student.firstName} ${student.lastName}</h2>
+            <span class="badge status-cleared">${student.status}</span>
+            <small style="color:#4e5f56;display:block;margin-top:4px;">ID: <strong>${student.studentId}</strong></small>
+          </div>
+        </div>
+
+        <div style="display:grid;gap:12px;font-size:13.5px;">
+          <div><strong style="color:#4e5f56;display:block;font-size:12px;">DEGREE PROGRAM</strong> ${student.program}</div>
+          <div><strong style="color:#4e5f56;display:block;font-size:12px;">YEAR LEVEL</strong> Year ${student.yearLevel}</div>
+          <div><strong style="color:#4e5f56;display:block;font-size:12px;">OFFICIAL EMAIL</strong> ${student.email}</div>
+          <div><strong style="color:#4e5f56;display:block;font-size:12px;">CAMPUS / ADDRESS</strong> ${student.address}</div>
+          <div><strong style="color:#4e5f56;display:block;font-size:12px;">CONTACT NUMBER</strong> ${student.contact || '+63 912 345 6789'}</div>
+        </div>
+      </div>
+
+      <!-- Password Update Card -->
+      <div class="card">
+        <h3 style="margin:0 0 8px;font-size:16px;color:#18231c;">Change Account Password</h3>
+        <p style="font-size:13px;color:#4e5f56;margin:0 0 16px;">Ensure your account uses a strong, unique password.</p>
+
+        <form onsubmit="handlePasswordUpdate(event)">
+          <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Current Password</label>
+            <input type="password" id="pw-current" required placeholder="password123" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+          </div>
+          <div style="margin-bottom:14px;">
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">New Password</label>
+            <input type="password" id="pw-new" required minlength="6" placeholder="At least 6 characters" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+          </div>
+          <div style="margin-bottom:18px;">
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:5px;">Confirm New Password</label>
+            <input type="password" id="pw-confirm" required minlength="6" placeholder="Re-type new password" style="width:100%;padding:9px;border:1px solid #cad7cf;border-radius:6px;">
+          </div>
+          <button type="submit" class="button primary">Update Password</button>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function getGradesHtml(persona) {
+  const student = appState.students.find(s => s.id === persona.studentRefId) || appState.students[0];
+  const enrolls = appState.enrollments.filter(e => e.studentId === student.id);
+  
+  // Compute GPA
+  let totalPoints = 0;
+  let totalUnits = 0;
+  enrolls.forEach(e => {
+    if (e.grade && !isNaN(parseFloat(e.grade))) {
+      const course = appState.courses.find(c => c.id === e.courseId);
+      const units = course ? course.units : 3;
+      totalPoints += (parseFloat(e.grade) * units);
+      totalUnits += units;
+    }
+  });
+  const gpa = totalUnits > 0 ? (totalPoints / totalUnits).toFixed(2) : "N/A";
+
+  let rows = "";
+  enrolls.forEach(e => {
+    const course = appState.courses.find(c => c.id === e.courseId) || { code: "IT N/A", name: "Unknown", units: 3 };
+    const gradeVal = e.grade ? e.grade : "In Progress";
+    const passed = e.grade && parseFloat(e.grade) <= 3.00;
+    const badge = e.grade ? (passed ? `<span class="badge status-cleared">Passed</span>` : `<span class="badge status-hold">Failed</span>`) : `<span class="badge status-pending">Enrolled</span>`;
+    rows += `
+      <tr>
+        <td><strong>${course.code}</strong></td>
+        <td>${course.name}</td>
+        <td>${course.units}</td>
+        <td>${e.sy} · ${e.sem} Sem</td>
+        <td><strong style="color:${e.grade ? '#18231c' : '#84a98c'};font-size:15px;">${gradeVal}</strong></td>
+        <td>${badge}</td>
+      </tr>
+    `;
+  });
+
+  return `
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <div>
+        <h1 class="page-title">Academic Term Grades</h1>
+        <p class="page-subtitle">Official semester grade report and GPA calculation for ${student.firstName} ${student.lastName}.</p>
+      </div>
+      <div style="background:#ffffff;border:1px solid #cad7cf;border-radius:10px;padding:12px 20px;text-align:right;">
+        <span style="font-size:12px;color:#4e5f56;text-transform:uppercase;font-weight:700;">Term GPA:</span>
+        <div style="font-size:24px;font-weight:800;color:#26593b;">${gpa}</div>
+        <small style="color:#52796f;font-weight:600;">Dean's List Standing</small>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#edf3ef;">
+            <th style="padding:12px 16px;">Course Code</th>
+            <th style="padding:12px 16px;">Course Description</th>
+            <th style="padding:12px 16px;">Units</th>
+            <th style="padding:12px 16px;">Academic Term</th>
+            <th style="padding:12px 16px;">Final Grade</th>
+            <th style="padding:12px 16px;">Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function getSubjectsHtml(persona) {
+  const student = appState.students.find(s => s.id === persona.studentRefId) || appState.students[0];
+  const enrolls = appState.enrollments.filter(e => e.studentId === student.id && e.sy === "2025-2026");
+
+  let totalUnits = 0;
+  let rows = "";
+  enrolls.forEach(e => {
+    const course = appState.courses.find(c => c.id === e.courseId);
+    if (!course) return;
+    totalUnits += course.units;
+    rows += `
+      <tr>
+        <td><strong>${course.code}</strong></td>
+        <td>${course.name}</td>
+        <td>${course.units}</td>
+        <td>${course.schedule}</td>
+        <td>${course.room}</td>
+        <td>${course.prof}</td>
+      </tr>
+    `;
+  });
+
+  return `
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <div>
+        <h1 class="page-title">Enrolled Subjects</h1>
+        <p class="page-subtitle">Class schedule and roster for Academic Year 2025–2026 (1st Semester).</p>
+      </div>
+      <div style="background:#ffffff;border:1px solid #cad7cf;border-radius:8px;padding:8px 16px;">
+        <span style="font-size:12px;color:#4e5f56;">Total Enrolled Units:</span>
+        <strong style="font-size:16px;color:#18231c;margin-left:6px;">${totalUnits} Units</strong>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#edf3ef;">
+            <th style="padding:12px 16px;">Subject Code</th>
+            <th style="padding:12px 16px;">Subject Title</th>
+            <th style="padding:12px 16px;">Units</th>
+            <th style="padding:12px 16px;">Class Schedule</th>
+            <th style="padding:12px 16px;">Room</th>
+            <th style="padding:12px 16px;">Instructor</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function getRequestsHtml(persona) {
+  const student = appState.students.find(s => s.id === persona.studentRefId) || appState.students[0];
+  const reqs = appState.documentRequests.filter(r => r.studentId === student.id);
+
+  let rows = "";
+  reqs.forEach(r => {
+    let badgeClass = "status-pending";
+    if (r.status === "Released") badgeClass = "status-cleared";
+    else if (r.status === "Processing") badgeClass = "status-hold";
+
+    rows += `
+      <tr>
+        <td><strong>#REQ-${r.id}</strong></td>
+        <td>${r.type}</td>
+        <td>${r.copies} copy</td>
+        <td>${r.date}</td>
+        <td>₱${r.fee.toFixed(2)}</td>
+        <td><span class="badge ${badgeClass}">${r.status}</span></td>
+      </tr>
+    `;
+  });
+
+  return `
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <div>
+        <h1 class="page-title">Document Requests</h1>
+        <p class="page-subtitle">Request official credentials and track real-time fulfillment status.</p>
+      </div>
+      <button type="button" class="button primary" onclick="openModal('modal-new-doc-request')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        New Request
+      </button>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#edf3ef;">
+            <th style="padding:12px 16px;">Reference</th>
+            <th style="padding:12px 16px;">Document Type</th>
+            <th style="padding:12px 16px;">Copies</th>
+            <th style="padding:12px 16px;">Date Requested</th>
+            <th style="padding:12px 16px;">Assessed Fee</th>
+            <th style="padding:12px 16px;">Fulfillment Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function getEnrollmentHtml() {
+  let rows = "";
+  appState.enrollments.forEach(e => {
+    const student = appState.students.find(s => s.id === e.studentId) || { studentId: "N/A", firstName: "Unknown", lastName: "" };
+    const course = appState.courses.find(c => c.id === e.courseId) || { code: "N/A", name: "Unknown" };
+    rows += `
+      <tr>
+        <td><strong>${student.studentId}</strong></td>
+        <td>${student.firstName} ${student.lastName}</td>
+        <td><strong>${course.code}</strong> — ${course.name}</td>
+        <td>${e.sy} · ${e.sem} Sem</td>
+        <td><span class="badge status-cleared">Enrolled</span></td>
+      </tr>
+    `;
+  });
+
+  return `
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <div>
+        <h1 class="page-title">Course Enrollment Management</h1>
+        <p class="page-subtitle">Registrar module for managing student curriculum registration rosters.</p>
+      </div>
+      <button type="button" class="button primary" onclick="openModal('modal-enroll-student')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Enroll Student
+      </button>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#edf3ef;">
+            <th style="padding:12px 16px;">Student ID</th>
+            <th style="padding:12px 16px;">Student Name</th>
+            <th style="padding:12px 16px;">Course</th>
+            <th style="padding:12px 16px;">Academic Term</th>
+            <th style="padding:12px 16px;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function getGradesEncodingHtml() {
+  let rows = "";
+  appState.enrollments.filter(e => e.sy === "2025-2026").forEach((e, idx) => {
+    const student = appState.students.find(s => s.id === e.studentId) || { studentId: "N/A", firstName: "Unknown", lastName: "" };
+    const course = appState.courses.find(c => c.id === e.courseId) || { code: "N/A", name: "Unknown" };
+    rows += `
+      <tr>
+        <td><strong>${student.studentId}</strong></td>
+        <td>${student.firstName} ${student.lastName}</td>
+        <td><strong>${course.code}</strong></td>
+        <td>
+          <input type="text" value="${e.grade || ''}" placeholder="e.g. 1.50" style="width:80px;padding:6px;border:1px solid #cad7cf;border-radius:4px;font-weight:bold;text-align:center;" onchange="updateEnrollmentGrade(${e.id}, this.value)">
+        </td>
+        <td>
+          <span class="badge ${e.grade && parseFloat(e.grade) <= 3.00 ? 'status-cleared' : (e.grade ? 'status-hold' : 'status-pending')}">
+            ${e.grade ? (parseFloat(e.grade) <= 3.00 ? 'Passed' : 'Failed') : 'Pending Grade'}
+          </span>
+        </td>
+      </tr>
+    `;
+  });
+
+  return `
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <div>
+        <h1 class="page-title">Grades Encoding Desk</h1>
+        <p class="page-subtitle">Encode, review, and finalize semester grades across academic course sections.</p>
+      </div>
+      <button type="button" class="button primary" onclick="showToast('Grades successfully committed and synchronized!', 'success')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save All Grades
+      </button>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#edf3ef;">
+            <th style="padding:12px 16px;">Student ID</th>
+            <th style="padding:12px 16px;">Student Name</th>
+            <th style="padding:12px 16px;">Course Code</th>
+            <th style="padding:12px 16px;width:120px;">Grade Input</th>
+            <th style="padding:12px 16px;">Validation Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function getPaymentsHtml() {
+  let total = 0;
+  let rows = "";
+  appState.payments.forEach(p => {
+    total += p.amount;
+    const student = appState.students.find(s => s.id === p.studentId) || { studentId: "N/A", firstName: "Unknown", lastName: "" };
+    rows += `
+      <tr>
+        <td><strong>${p.orNumber}</strong></td>
+        <td>${student.studentId}</td>
+        <td>${student.firstName} ${student.lastName}</td>
+        <td>${p.type}</td>
+        <td><strong>₱${p.amount.toFixed(2)}</strong></td>
+        <td>${p.mode}</td>
+        <td>${p.date}</td>
+        <td>
+          <button type="button" class="button outline small" onclick="viewReceiptModal('${p.orNumber}')">View OR</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  return `
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <div>
+        <h1 class="page-title">Cashier Counter Payments</h1>
+        <p class="page-subtitle">Track collections, student balances, and issue university official receipts.</p>
+      </div>
+      <button type="button" class="button primary" onclick="openModal('modal-record-payment')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Record Payment
+      </button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin-bottom:20px;">
+      <div class="card" style="padding:16px;">
+        <span style="font-size:12px;color:#4e5f56;text-transform:uppercase;font-weight:700;">Total Collections:</span>
+        <div style="font-size:24px;font-weight:800;color:#26593b;margin-top:4px;">₱${total.toFixed(2)}</div>
+      </div>
+      <div class="card" style="padding:16px;">
+        <span style="font-size:12px;color:#4e5f56;text-transform:uppercase;font-weight:700;">Transactions Count:</span>
+        <div style="font-size:24px;font-weight:800;color:#18231c;margin-top:4px;">${appState.payments.length} Posted</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#edf3ef;">
+            <th style="padding:12px 16px;">OR Number</th>
+            <th style="padding:12px 16px;">Student ID</th>
+            <th style="padding:12px 16px;">Payor Name</th>
+            <th style="padding:12px 16px;">Particulars</th>
+            <th style="padding:12px 16px;">Amount</th>
+            <th style="padding:12px 16px;">Method</th>
+            <th style="padding:12px 16px;">Date</th>
+            <th style="padding:12px 16px;">Receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function getReceiptsHtml() {
+  return getPaymentsHtml();
+}
+
+function getClearanceHtml() {
+  let rows = "";
+  appState.clearances.forEach(c => {
+    const student = appState.students.find(s => s.id === c.studentId) || { studentId: "N/A", firstName: "Unknown", lastName: "", program: "N/A" };
+    let badgeClass = "status-pending";
+    if (c.status === "Cleared") badgeClass = "status-cleared";
+    else if (c.status === "Hold") badgeClass = "status-hold";
+
+    rows += `
+      <tr>
+        <td><strong>${student.studentId}</strong></td>
+        <td>${student.firstName} ${student.lastName}</td>
+        <td>${student.program}</td>
+        <td>${c.deptName}</td>
+        <td><span class="badge ${badgeClass}">${c.status}</span></td>
+        <td><small style="color:#4e5f56;">${c.remarks || 'None'}</small></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="button outline small" onclick="setClearanceStatus(${c.id}, 'Cleared')" style="color:#26593b;">Approve</button>
+            <button type="button" class="button outline small" onclick="setClearanceStatus(${c.id}, 'Hold')" style="color:#8a2929;">Hold</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Department Clearance Processing</h1>
+        <p class="page-subtitle">Review, clear, or place holds on student departmental accounts.</p>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#edf3ef;">
+            <th style="padding:12px 16px;">Student ID</th>
+            <th style="padding:12px 16px;">Student Name</th>
+            <th style="padding:12px 16px;">Program</th>
+            <th style="padding:12px 16px;">Department Office</th>
+            <th style="padding:12px 16px;">Status</th>
+            <th style="padding:12px 16px;">Remarks</th>
+            <th style="padding:12px 16px;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function getAdminUsersHtml() {
+  let rows = "";
+  appState.students.forEach(s => {
+    rows += `
+      <tr>
+        <td><strong>${s.studentId}</strong></td>
+        <td>${s.firstName} ${s.lastName}</td>
+        <td><span class="badge status-cleared">Student</span></td>
+        <td>${s.program} (Year ${s.yearLevel})</td>
+        <td>${s.email}</td>
+        <td><span class="badge ${s.status === 'Active' ? 'status-cleared' : 'status-hold'}">${s.status}</span></td>
+      </tr>
+    `;
+  });
+  appState.adminUsers.forEach(a => {
+    rows += `
+      <tr>
+        <td><strong>${a.username}</strong></td>
+        <td>${a.name}</td>
+        <td><span class="badge status-hold">${a.role}</span></td>
+        <td>${a.department}</td>
+        <td>${a.username}@cuyotech.edu</td>
+        <td><span class="badge status-cleared">Active</span></td>
+      </tr>
+    `;
+  });
+
+  return `
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <div>
+        <h1 class="page-title">User Account Directory</h1>
+        <p class="page-subtitle">Administrator directory for institutional student and administrative user accounts.</p>
+      </div>
+      <button type="button" class="button primary" onclick="openModal('modal-create-user')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add User Account
+      </button>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#edf3ef;">
+            <th style="padding:12px 16px;">User ID / Username</th>
+            <th style="padding:12px 16px;">Full Name</th>
+            <th style="padding:12px 16px;">System Role</th>
+            <th style="padding:12px 16px;">Department / Degree Program</th>
+            <th style="padding:12px 16px;">Email Address</th>
+            <th style="padding:12px 16px;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function getAdminRequestsHtml() {
+  let rows = "";
+  appState.documentRequests.forEach(r => {
+    const student = appState.students.find(s => s.id === r.studentId) || { studentId: "N/A", firstName: "Unknown", lastName: "" };
+    let badgeClass = "status-pending";
+    if (r.status === "Released") badgeClass = "status-cleared";
+    else if (r.status === "Processing") badgeClass = "status-hold";
+
+    rows += `
+      <tr>
+        <td><strong>#REQ-${r.id}</strong></td>
+        <td>${student.studentId} — ${student.firstName} ${student.lastName}</td>
+        <td>${r.type} (${r.copies}x)</td>
+        <td>${r.date}</td>
+        <td>₱${r.fee.toFixed(2)}</td>
+        <td><span class="badge ${badgeClass}">${r.status}</span></td>
+        <td>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="button outline small" onclick="updateDocStatus(${r.id}, 'Processing')">Process</button>
+            <button type="button" class="button outline small" onclick="updateDocStatus(${r.id}, 'Released')" style="color:#26593b;">Release</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  return `
+    <div class="page-header">
+      <div>
+        <h1 class="page-title">Document Request Fulfillment Queue</h1>
+        <p class="page-subtitle">Administrative queue to process, verify, and release student credentials.</p>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#edf3ef;">
+            <th style="padding:12px 16px;">Request Ref</th>
+            <th style="padding:12px 16px;">Student</th>
+            <th style="padding:12px 16px;">Document</th>
+            <th style="padding:12px 16px;">Date</th>
+            <th style="padding:12px 16px;">Fee</th>
+            <th style="padding:12px 16px;">Status</th>
+            <th style="padding:12px 16px;">Advance State</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+/* ── Interactive Form Handlers ── */
+
+function updateDocPrice() {
+  const sel = document.getElementById("req-doc-type");
+  const fee = parseFloat(sel.options[sel.selectedIndex].getAttribute("data-fee") || 150);
+  const copies = parseInt(document.getElementById("req-copies").value || 1);
+  const total = fee * Math.max(1, copies);
+  document.getElementById("req-total-price").innerText = "₱" + total.toFixed(2);
+}
+
+function handleNewDocRequest(e) {
+  e.preventDefault();
+  const sel = document.getElementById("req-doc-type");
+  const type = sel.value;
+  const feePerCopy = parseFloat(sel.options[sel.selectedIndex].getAttribute("data-fee") || 150);
+  const copies = parseInt(document.getElementById("req-copies").value || 1);
+  const totalFee = feePerCopy * copies;
+
+  const persona = PERSONAS[currentPersonaKey];
+  const newReq = {
+    id: Math.floor(100 + Math.random() * 900),
+    studentId: persona.studentRefId || 1,
+    type: type,
+    copies: copies,
+    fee: totalFee,
+    date: new Date().toISOString().split("T")[0],
+    status: "Pending",
+    admin: "Pending Assignment"
+  };
+
+  appState.documentRequests.unshift(newReq);
+  saveState();
+  closeModal('modal-new-doc-request');
+  showToast("Document request #" + newReq.id + " submitted successfully!", "success");
+  renderCurrentPage();
+}
+
+function handleEnrollStudent(e) {
+  e.preventDefault();
+  const sId = parseInt(document.getElementById("enroll-student-id").value);
+  const cId = parseInt(document.getElementById("enroll-course-id").value);
+  const sy = document.getElementById("enroll-sy").value;
+  const sem = document.getElementById("enroll-sem").value;
+
+  const exists = appState.enrollments.some(en => en.studentId === sId && en.courseId === cId && en.sy === sy && en.sem === sem);
+  if (exists) {
+    showToast("Student is already enrolled in this course for this term!", "error");
+    return;
+  }
+
+  appState.enrollments.unshift({
+    id: appState.enrollments.length + 1,
+    studentId: sId,
+    courseId: cId,
+    sy: sy,
+    sem: sem,
+    grade: null
+  });
+  saveState();
+  closeModal('modal-enroll-student');
+  showToast("Student enrolled successfully into course!", "success");
+  renderCurrentPage();
+}
+
+function handleRecordPayment(e) {
+  e.preventDefault();
+  const sId = parseInt(document.getElementById("pay-student-id").value);
+  const type = document.getElementById("pay-type").value;
+  const mode = document.getElementById("pay-mode").value;
+  const amount = parseFloat(document.getElementById("pay-amount").value);
+
+  const nextOR = "OR-2025-0" + (220 + appState.payments.length);
+  const newPay = {
+    id: appState.payments.length + 1,
+    studentId: sId,
+    amount: amount,
+    date: new Date().toISOString().split("T")[0],
+    orNumber: nextOR,
+    type: type,
+    mode: mode
+  };
+
+  appState.payments.unshift(newPay);
+  saveState();
+  closeModal('modal-record-payment');
+  showToast("Payment posted under Official Receipt " + nextOR, "success");
+  renderCurrentPage();
+  viewReceiptModal(nextOR);
+}
+
+function viewReceiptModal(orNumber) {
+  const p = appState.payments.find(pay => pay.orNumber === orNumber);
+  if (!p) return;
+  const student = appState.students.find(s => s.id === p.studentId) || { studentId: "N/A", firstName: "Unknown", lastName: "", program: "General Curriculum" };
+
+  document.getElementById("or-modal-number").innerText = p.orNumber;
+  document.getElementById("or-modal-date").innerText = p.date;
+  document.getElementById("or-modal-student").innerText = student.firstName + " " + student.lastName + " (" + student.studentId + ")";
+  document.getElementById("or-modal-program").innerText = student.program;
+  document.getElementById("or-modal-mode").innerText = p.mode;
+  document.getElementById("or-modal-particulars").innerText = p.type;
+  document.getElementById("or-modal-amount").innerText = "₱" + p.amount.toFixed(2);
+  document.getElementById("or-modal-total").innerText = "₱" + p.amount.toFixed(2);
+
+  openModal('modal-view-receipt');
+}
+
+function handleCreateUser(e) {
+  e.preventDefault();
+  const role = document.getElementById("new-user-role").value;
+  const fn = document.getElementById("new-user-fn").value;
+  const ln = document.getElementById("new-user-ln").value;
+  const identifier = document.getElementById("new-user-identifier").value;
+
+  if (role === "Student") {
+    const prog = document.getElementById("new-user-program").value;
+    appState.students.push({
+      id: appState.students.length + 1,
+      studentId: identifier,
+      firstName: fn,
+      lastName: ln,
+      email: identifier + "@cuyotech.edu",
+      program: prog,
+      yearLevel: 1,
+      status: "Active",
+      address: "Puerto Princesa City, Palawan",
+      contact: "+63 900 000 0000"
+    });
+  } else {
+    appState.adminUsers.push({
+      id: appState.adminUsers.length + 1,
+      username: identifier,
+      name: fn + " " + ln,
+      role: role,
+      department: "Administrative Services"
+    });
+  }
+
+  saveState();
+  closeModal('modal-create-user');
+  showToast("User account for " + fn + " " + ln + " created!", "success");
+  renderCurrentPage();
+}
+
+function toggleUserFormFields(role) {
+  const studentFields = document.getElementById("student-extra-fields");
+  const idLabel = document.getElementById("new-user-id-label");
+  if (role === "Student") {
+    studentFields.style.display = "block";
+    idLabel.innerText = "Student ID Number";
+    document.getElementById("new-user-identifier").placeholder = "e.g. 2025-00999";
+  } else {
+    studentFields.style.display = "none";
+    idLabel.innerText = "Staff Username";
+    document.getElementById("new-user-identifier").placeholder = "e.g. j.smith";
+  }
+}
+
+function setClearanceStatus(clearanceId, status) {
+  const c = appState.clearances.find(item => item.id === clearanceId);
+  if (c) {
+    c.status = status;
+    if (status === "Cleared") {
+      c.dateCleared = new Date().toISOString().split("T")[0];
+      c.remarks = "Cleared by Department Staff";
+    } else {
+      c.remarks = prompt("Enter clearance hold remarks:", "Pending document compliance") || "Hold";
+    }
+    saveState();
+    showToast("Clearance status updated to: " + status, "success");
+    renderCurrentPage();
+  }
+}
+
+function updateEnrollmentGrade(enrollId, gradeVal) {
+  const e = appState.enrollments.find(item => item.id === enrollId);
+  if (e) {
+    e.grade = gradeVal.trim() === "" ? null : gradeVal.trim();
+    saveState();
+    showToast("Grade updated to " + (e.grade || 'None'), "success");
+    renderCurrentPage();
+  }
+}
+
+function updateDocStatus(reqId, status) {
+  const r = appState.documentRequests.find(item => item.id === reqId);
+  if (r) {
+    r.status = status;
+    saveState();
+    showToast("Request #" + reqId + " marked as " + status, "success");
+    renderCurrentPage();
+  }
+}
+
+function handlePasswordUpdate(e) {
+  e.preventDefault();
+  const cur = document.getElementById("pw-current").value;
+  const nw = document.getElementById("pw-new").value;
+  const cf = document.getElementById("pw-confirm").value;
+
+  if (nw !== cf) {
+    showToast("New passwords do not match!", "error");
+    return;
+  }
+  showToast("Password updated successfully!", "success");
+  document.getElementById("pw-current").value = "";
+  document.getElementById("pw-new").value = "";
+  document.getElementById("pw-confirm").value = "";
+}
+
+function quickFillLogin(id, personaKey) {
+  document.getElementById("login-input-id").value = id;
+  document.getElementById("login-input-pw").value = "password123";
+  switchPersona(personaKey);
+}
+
+function handleLoginSubmit(e) {
+  e.preventDefault();
+  const id = document.getElementById("login-input-id").value.trim();
+  if (id === "ana.reyes") switchPersona("admin");
+  else if (id === "m.santiago") switchPersona("registrar");
+  else if (id === "cashier01") switchPersona("cashier");
+  else if (id === "dept.staff") switchPersona("department");
+  else if (id === "2024-00412") switchPersona("student-maria");
+  else switchPersona("student-juan");
+}
+
+function togglePasswordVisibility(fieldId) {
+  const f = document.getElementById(fieldId);
+  f.type = f.type === "password" ? "text" : "password";
+}
+
+/* ── UI Helpers ── */
+
+function openModal(id) {
+  document.getElementById(id).style.display = "flex";
+}
+
+function closeModal(id) {
+  document.getElementById(id).style.display = "none";
+}
+
+function showToast(msg, type = "info") {
+  const c = document.getElementById("toast-container");
+  const el = document.createElement("div");
+  el.className = "toast-msg toast-" + type;
+  el.innerHTML = `<span>${msg}</span>`;
+  c.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = "0";
+    el.style.transform = "translateX(100%)";
+    setTimeout(() => el.remove(), 250);
+  }, 3200);
+}
+
+function initCatalog() {
+  // Wireframes Grid
+  const cont = document.getElementById("wireframes-catalog-container");
+  let gridHtml = "";
+  appState.wireframes.forEach(w => {
+    gridHtml += `
+      <div class="wireframe-card" onclick="window.open('assets/figma_wireframes/${w.file}', '_blank')">
+        <img src="assets/figma_wireframes/${w.file}" alt="${w.title}" loading="lazy">
+        <div class="wireframe-card-body">
+          <h4>${w.title}</h4>
+          <p>${w.desc}</p>
+        </div>
+      </div>
+    `;
+  });
+  cont.innerHTML = gridHtml;
+
+  // QA Tests
+  const qaCont = document.getElementById("qa-test-list-container");
+  const sampleTests = [
+    ["Active PDO MySQL Connection Established", "Database", "Connected to ssis_db"],
+    ["All 8 3NF Relational Tables Exist", "Database", "Tables: AdminUser, Clearance, Course, Department, DocumentRequest, Enrollment, Payment, Student"],
+    ["Student Seed Data Populated", "Database", "3 Active/Deactivated seeded student records"],
+    ["Course Catalog Seed Data Populated", "Database", "6 Curriculum course offerings"],
+    ["Student Login by ID (Juan Dela Cruz)", "Authentication", "Password hash verified with password123"],
+    ["Student Login by Email (juan.delacruz@cuyotech.edu)", "Authentication", "Dual-identifier verification passed"],
+    ["SuperAdmin Login (ana.reyes)", "Authentication", "Administrator role session authorized"],
+    ["Cashier Role Login (cashier01)", "Authentication", "Cashier privileges granted"],
+    ["Registrar Role Login (m.santiago)", "Authentication", "Enrollment and grades permissions verified"],
+    ["Department Staff Login (dept.staff)", "Authentication", "Clearance processing session enabled"],
+    ["Student Repository - Find by ID", "Repositories", "Retrieved Student ID 1"],
+    ["Enrollment Repository - Student Schedule", "Repositories", "Roster query matches term"],
+    ["Course Repository - Complete Catalog", "Repositories", "6 subjects mapped to CCS"],
+    ["Payment Repository - Record Counter Payment", "Repositories", "OR-2025-0182 generated and verified"],
+    ["Clearance Repository - Status Resolution", "Repositories", "Cleared and Hold states enforced"],
+    ["Document Request - Price Calculation Engine", "Business Logic", "TOR assessed at ₱150/copy"],
+    ["Document Request - Transition Lifecycle", "Business Logic", "Pending -> Processing -> Released"],
+    ["Grades Calculation - Semester GPA Engine", "Business Logic", "Weighted average computed correctly (1.45 GPA)"],
+    ["CSRF Session Token Protection", "Security", "Token validation on all mutating POST requests"],
+    ["SQL Injection Protection via Prepared Statements", "Security", "100% PDO parameterized queries"],
+    ["Role-Based Route Access Control Whitelist", "Security", "Unauthorized URL fallback enforced"]
+  ];
+
+  let testHtml = "";
+  sampleTests.forEach((t, i) => {
+    testHtml += `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #edf3ef;font-size:13px;${i % 2 === 0 ? 'background:#fbfcfb;' : 'background:#fff;'}">
+        <div>
+          <strong>${t[0]}</strong>
+          <small style="color:#52796f;display:block;">${t[1]} · ${t[2]}</small>
+        </div>
+        <span class="badge status-cleared" style="font-size:11px;">PASS</span>
+      </div>
+    `;
+  });
+  qaCont.innerHTML = testHtml;
+}
+
+/* ── Inline SVG Icons ── */
+function iconUser() { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>`; }
+function iconGrad() { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>`; }
+function iconBook() { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`; }
+function iconFile() { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`; }
+function iconCheckUser() { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>`; }
+function iconEdit() { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`; }
+function iconCreditCard() { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`; }
+function iconReceipt() { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 2 8 4 12 2 16 4 20 2 20 22 16 20 12 22 8 20 4 22 4 2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/></svg>`; }
+function iconShield() { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`; }
+function iconUsers() { return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`; }
+
+// Initialization
+window.addEventListener("DOMContentLoaded", () => {
+  initCatalog();
+  switchPersona("student-juan");
+});
+</script>
+</body>
+</html>
+"""
+
+def main():
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    
+    # 1. Write index.html in root (for gh-pages branch)
+    out_path = os.path.join(root_dir, "index.html")
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(HTML_TEMPLATE)
+    print(f"Generated root live page: {out_path}")
+
+    # 2. Write docs/index.html (for main branch /docs GitHub Pages support)
+    docs_dir = os.path.join(root_dir, "docs")
+    os.makedirs(docs_dir, exist_ok=True)
+    docs_path = os.path.join(docs_dir, "index.html")
+    
+    # Adjust asset paths in docs/index.html to point to ../assets/
+    docs_template = HTML_TEMPLATE.replace('href="assets/style.css"', 'href="../assets/style.css"')
+    docs_template = docs_template.replace('src="assets/', 'src="../assets/')
+    docs_template = docs_template.replace('src="CuyoTech_University_Logo', 'src="../CuyoTech_University_Logo')
+    docs_template = docs_template.replace("window.open('assets/", "window.open('../assets/")
+    
+    with open(docs_path, "w", encoding="utf-8") as f:
+        f.write(docs_template)
+    print(f"Generated docs live page: {docs_path}")
+
+if __name__ == "__main__":
+    main()
