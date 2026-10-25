@@ -25,16 +25,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
-      - name: Build Live Showcase Bundle
+      - name: Build Website Bundle
         run: |
-          python3 scripts/build_live_showcase.py
           mkdir -p _site
-          cp index.html _site/
+          sed -e 's|\.\./assets/|assets/|g' -e 's|\.\./CuyoTech_University_Logo|CuyoTech_University_Logo|g' docs/index.html > _site/index.html
           cp -r assets _site/
           cp CuyoTech_University_Logo*.png _site/ 2>/dev/null || true
 

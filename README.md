@@ -6,14 +6,10 @@ No Node.js, no TypeScript, no npm, and no build steps required.
 
 ---
 
-## 🌐 Live Interactive Demo (GitHub Pages)
+## 🌐 Live Website (GitHub Pages)
 
-Experience the live system directly in your browser without requiring a local PHP/MySQL or XAMPP setup:  
-👉 **[Launch CuyoTech SSIS Live Showcase](https://eysiarw.github.io/CCS109-FINAL-PROJECT/)**
-
-- **Quick Persona Switcher**: Instantly switch between Student (Juan / Maria), Registrar (M. Santiago), Cashier (Pedro Reyes), Department Staff, and Administrator (Ana Reyes).
-- **Interactive Modules**: Test document requesting with dynamic fee calculation, grade encoding, payment recording with printable official receipts, and departmental clearance.
-- **System Specifications**: Built-in 3NF relational database schema viewer, QA test report (36/36 passed), and 15 UI/UX high-resolution wireframe screens.
+Access the live Student Services Information System (SSIS) directly in your browser:  
+👉 **[Open CuyoTech SSIS Portal](https://eysiarw.github.io/CCS109-FINAL-PROJECT/)**
 
 ---
 
@@ -22,8 +18,8 @@ Experience the live system directly in your browser without requiring a local PH
 ```
 CCS109-final-project/
 ├── index.php            ← Application entrypoint, routing & action dispatcher
+├── db.php               ← Database connection helper & initialization routines
 ├── ssis_schema.sql      ← 3NF Database schema & sample seed data (MySQL / MariaDB)
-├── DATABASE_DESIGN.md   ← Full ERD & 3NF Normalization document (Part B requirement)
 ├── README.md            ← Project documentation & credentials guide
 ├── config/
 │   └── Database.php     ← PDO connection manager with Singleton pattern & port probing
@@ -41,21 +37,9 @@ CCS109-final-project/
 │   ├── cashier/         ← Cashier module (payments, receipts)
 │   ├── department/      ← Department clearance evaluation
 │   └── admin/           ← Administrator module (user accounts, request processing)
-├── assets/
-│   └── style.css        ← Responsive University CSS stylesheets & design tokens
-└── data/                ← Reference worksheets & schema documentation
+└── assets/
+    └── style.css        ← Responsive University CSS stylesheets & design tokens
 ```
-
----
-
-## 📋 Section B: Database Design (Normalization Required)
-*Requirement: ERD + 3NF table designs (at least 6 tables).*
-
-See **[DATABASE_DESIGN.md](DATABASE_DESIGN.md)** for the complete deliverable, including:
-1. **Full Mermaid Entity-Relationship Diagram (ERD)** with crow's foot notation, primary/foreign keys, and cardinalities.
-2. **Step-by-step Normalization Analysis** (UNF $\to$ 1NF $\to$ 2NF $\to$ 3NF) with functional dependencies.
-3. **8 Table 3NF Specifications** (exceeding the 6-table minimum requirement).
-4. **Data Dictionary** with field names, types, constraints, and descriptions.
 
 ---
 
