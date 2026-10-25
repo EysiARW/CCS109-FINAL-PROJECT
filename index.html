@@ -1,0 +1,2592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — CuyoTech SSIS</title>
+  <link rel="icon" type="image/png" href="CuyoTech_University_Logo.png">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<div id="auth-view" style="display:none;">
+  <main class="login-page">
+    <section class="login-brand-panel">
+      <div class="brand">
+        <img src="CuyoTech_University_Logo_sm.png" alt="CuyoTech University Logo" class="brand-logo-img" style="height:52px;width:auto;max-width:78px;object-fit:contain;flex-shrink:0;" width="64" height="52">
+        <div><strong>CuyoTech</strong><small>University</small></div>
+      </div>
+      <div class="login-message">
+        <p class="eyebrow">Student services information system</p>
+        <h1>Skip the line.<br>Do it online.</h1>
+        <p>Access grades, request school documents, and manage your student account from anywhere.</p>
+      </div>
+      <span class="login-version">CuyoTech University · Academic Year 2025–2026</span>
+    </section>
+    <section class="login-form-panel">
+      <div class="login-form-wrap">
+        <div class="brand brand-compact">
+          <img src="CuyoTech_University_Logo_sm.png" alt="CuyoTech University Logo" class="brand-logo-img" style="height:42px;width:auto;max-width:78px;object-fit:contain;flex-shrink:0;" width="64" height="52">
+          <div><strong>CuyoTech</strong><small>University</small></div>
+        </div>
+        <div class="login-heading">
+          <h2>Sign in</h2>
+          <p>Use your CuyoTech account to continue.</p>
+        </div>
+
+        <div id="login-error-alert" class="form-alert error" style="margin-bottom:18px;display:none;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="login-error-text"></span>
+        </div>
+
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <input type="hidden" name="action" value="login">
+          <div class="field">
+            <label for="student-id">Student ID or username</label>
+            <input id="student-id" name="student_id" placeholder="e.g. 2021-00123 or ana.reyes" autocomplete="username" value="2021-00123">
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <div class="input-action">
+              <input id="password" name="password" type="password" placeholder="Enter password (default: password123)" autocomplete="current-password" value="password123">
+              <button type="button" onclick="togglePw(this)">Show</button>
+            </div>
+          </div>
+          <button type="submit" class="button primary full no-spin">
+            Sign in
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </form>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="app-shell" id="app-shell" style="display:none;">
+  <!-- ── Sidebar ── -->
+  <aside class="sidebar">
+    <div class="brand">
+      <img src="CuyoTech_University_Logo_sm.png" alt="CuyoTech University Logo" class="brand-logo-img" style="height:52px;width:auto;max-width:78px;object-fit:contain;flex-shrink:0;" width="64" height="52">
+      <div><strong>CuyoTech</strong><small>University</small></div>
+    </div>
+
+    <div style="flex:1;overflow-y:auto;padding-right:4px;" id="sidebar-nav-container"></div>
+
+    <div class="sidebar-bottom">
+      <a href="?page=profile" onclick="return navClick(event, 'profile')" class="user-chip" style="text-decoration:none;display:flex;" title="View Account Profile">
+        <div class="avatar" id="sidebar-initials">JD</div>
+        <div>
+          <strong id="sidebar-name">Juan Dela Cruz</strong>
+          <small id="sidebar-role-id">Student · 2021-00123</small>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </a>
+      <a href="?action=logout" onclick="return handleLogout(event)" class="sign-out">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign out
+      </a>
+    </div>
+  </aside>
+
+  <!-- ── Main content ── -->
+  <main class="main-content">
+    <div class="mobile-topbar">
+      <div class="brand brand-compact">
+        <img src="CuyoTech_University_Logo_sm.png" alt="CuyoTech University Logo" class="brand-logo-img" style="height:42px;width:auto;max-width:78px;object-fit:contain;flex-shrink:0;" width="64" height="52">
+        <div><strong>CuyoTech</strong><small>University</small></div>
+      </div>
+      <button onclick="document.querySelector('.sidebar').classList.toggle('open')" aria-label="Toggle navigation menu">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="content-inner" id="content-inner"></div>
+  </main>
+
+  <!-- ── Mobile bottom nav ── -->
+  <nav class="mobile-nav" id="mobile-nav-container"></nav>
+</div>
+
+<!-- ── Reusable Custom Confirmation Modal ── -->
+<div id="modal-confirm" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeConfirmModal(false)">
+  <div class="modal small-modal" onclick="event.stopPropagation()" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+    <div class="modal-heading" style="margin-bottom:16px;">
+      <div>
+        <h2 id="confirm-modal-title" style="font-size:18px;">Confirm Action</h2>
+        <p id="confirm-modal-message">Are you sure you want to proceed?</p>
+      </div>
+      <button type="button" onclick="closeConfirmModal(false)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-actions" style="margin-top:20px;display:flex;justify-content:flex-end;gap:8px;">
+      <button type="button" class="button outline" onclick="closeConfirmModal(false)" id="confirm-modal-cancel">Cancel</button>
+      <button type="button" class="button primary" id="confirm-modal-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ICONS = {
+  userRound: `<svg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='8' r='5'/><path d='M20 21a8 8 0 1 0-16 0'/></svg>`,
+  graduationCap: `<svg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M22 10v6M2 10l10-5 10 5-10 5z'/><path d='M6 12v5c3 3 9 3 12 0v-5'/></svg>`,
+  bookOpen: `<svg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z'/><path d='M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z'/></svg>`,
+  fileText: `<svg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/><polyline points='14 2 14 8 20 8'/><line x1='16' y1='13' x2='8' y2='13'/><line x1='16' y1='17' x2='8' y2='17'/><polyline points='10 9 9 9 8 9'/></svg>`,
+  users: `<svg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><path d='M23 21v-2a4 4 0 0 0-3-3.87'/><path d='M16 3.13a4 4 0 0 1 0 7.75'/></svg>`,
+  userCheck: `<svg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2'/><circle cx='9' cy='7' r='4'/><polyline points='16 11 18 13 22 9'/></svg>`,
+  edit: `<svg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z'/><path d='m15 5 4 4'/></svg>`,
+  creditCard: `<svg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect width='20' height='14' x='2' y='5' rx='2'/><line x1='2' x2='22' y1='10' y2='10'/></svg>`,
+  receipt: `<svg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z'/><path d='M16 8h-6'/><path d='M16 12h-6'/><path d='M16 16h-6'/></svg>`,
+  shieldCheck: `<svg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'/><path d='m9 12 2 2 4-4'/></svg>`,
+  arrowRight: `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='5' y1='12' x2='19' y2='12'/><polyline points='12 5 19 12 12 19'/></svg>`,
+  check: `<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='20 6 9 13 4 8'/></svg>`,
+  alertCircle: `<svg xmlns='http://www.w3.org/2000/svg' width='17' height='17' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><line x1='12' y1='8' x2='12' y2='12'/><line x1='12' y1='16' x2='12.01' y2='16'/></svg>`,
+  chevronDown: `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>`,
+  search: `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='8'/><line x1='21' y1='21' x2='16.65' y2='16.65'/></svg>`,
+  keyRound: `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='7.5' cy='15.5' r='5.5'/><path d='m21 2-9.6 9.6'/><path d='m15.5 7.5 3 3L22 7l-3-3'/></svg>`,
+  x: `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='18' y1='6' x2='6' y2='18'/><line x1='6' y1='6' x2='18' y2='18'/></svg>`,
+  plus: `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><line x1='12' y1='5' x2='12' y2='19'/><line x1='5' y1='12' x2='19' y2='12'/></svg>`,
+  printer: `<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 6 2 18 2 18 9'/><path d='M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2'/><rect width='12' height='8' x='6' y='14'/></svg>`
+};
+
+function esc(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function pageHeader(title, subtitle = '', actionHtml = '') {
+  const sub = subtitle ? `<p class='page-subtitle'>${esc(subtitle)}</p>` : '';
+  return `<header class='page-header'><div><p class='breadcrumb'>Student services <span>/</span> SSIS</p><h1>${esc(title)}</h1>${sub}</div>${actionHtml}</header>`;
+}
+
+function statusBadge(text, tone = 'success') {
+  return `<span class='status ${esc(tone)}'><span class='status-dot'></span>${esc(text)}</span>`;
+}
+
+function tracker(current = 2) {
+  const steps = ['Submitted', 'Payment confirmed', 'Processing', 'Ready for release', 'Released'];
+  let html = `<div class='tracker'>`;
+  steps.forEach((step, i) => {
+    let cls = '';
+    if (i < current) cls = 'done';
+    else if (i === current) cls = 'current';
+    const icon = (i < current) ? ICONS.check : (i + 1);
+    html += `<div class='track-step ${cls}'><div class='track-line'></div><div class='track-icon'>${icon}</div><span>${esc(step)}</span></div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+const INITIAL_STATE = {
+  students: [
+    { id: 1, code: '2021-00123', enrollCode: '2021-00001', firstName: 'Juan', lastName: 'Dela Cruz', email: 'juan.delacruz@cuyotech.edu', password: 'password123', program: 'BS Information Technology', yearLevel: 3, status: 'Active', address: 'Brgy. San Pedro, Puerto Princesa City, Palawan 5300', contact: '+63 917 555 0182' },
+    { id: 2, code: '2024-00412', enrollCode: '2021-00002', firstName: 'Maria', lastName: 'Santos', email: '2024-00412@cuyotech.edu', password: 'password123', program: 'BS Accountancy', yearLevel: 1, status: 'Active', address: 'Brgy. Bancao-Bancao, Puerto Princesa City, Palawan 5300', contact: '+63 917 555 0182' },
+    { id: 3, code: '2020-00087', enrollCode: '2021-00003', firstName: 'Paolo', lastName: 'Gomez', email: '2020-00087@cuyotech.edu', password: 'password123', program: 'BS Information Technology', yearLevel: 4, status: 'Deactivated', address: 'Brgy. San Jose, Puerto Princesa City, Palawan 5300', contact: '+63 917 555 0182' }
+  ],
+  admins: [
+    { id: 1, code: 'admin-0001', username: 'ana.reyes', name: 'Ana Reyes', role: 'Administrator', department: 'Registrar Office', password: 'password123' },
+    { id: 2, code: 'admin-0002', username: 'm.santiago', name: 'M. Santiago', role: 'Registrar', department: 'Registrar Office', password: 'password123' },
+    { id: 3, code: 'admin-0003', username: 'cashier01', name: 'Cashier 01', role: 'Cashier', department: 'Cashier Office', password: 'password123' },
+    { id: 4, code: 'admin-0004', username: 'dept.staff', name: 'Dept.staff', role: 'DepartmentStaff', department: 'College of Computing Studies', password: 'password123' }
+  ],
+  courses: [
+    { id: 1, code: 'IT 311', name: 'Web Systems and Technologies', units: 3, schedule: 'MWF · 9:00–10:00 AM', room: 'ICT 204', instructor: 'M. Santos' },
+    { id: 2, code: 'IT 312', name: 'Database Management Systems', units: 3, schedule: 'TTh · 10:30–12:00 PM', room: 'ICT 206', instructor: 'J. Dela Cruz' },
+    { id: 3, code: 'IT 313', name: 'Information Assurance', units: 3, schedule: 'MWF · 1:00–2:00 PM', room: 'ICT 201', instructor: 'A. Reyes' },
+    { id: 4, code: 'IT 314', name: 'Systems Analysis and Design', units: 3, schedule: 'TTh · 2:00–3:30 PM', room: 'ICT 203', instructor: 'R. Mendoza' },
+    { id: 5, code: 'IT 221', name: 'Object-Oriented Programming', units: 3, schedule: 'MWF · 8:00–9:00 AM', room: 'ICT 101', instructor: 'Faculty' },
+    { id: 6, code: 'IT 222', name: 'Data Structures and Algorithms', units: 3, schedule: 'MWF · 10:00–11:00 AM', room: 'ICT 102', instructor: 'Faculty' }
+  ],
+  enrollments: [
+    { enrollment_id: 1, student_id: 1, student_code: '2021-00001', student_name: 'Juan Dela Cruz', student_program: 'BS Information Technology', course_id: 1, course_code: 'IT 311', course_name: 'Web Systems and Technologies', units: 3, school_year: '2025-2026', semester: '1st', grade: '1.25' },
+    { enrollment_id: 2, student_id: 1, student_code: '2021-00001', student_name: 'Juan Dela Cruz', student_program: 'BS Information Technology', course_id: 2, course_code: 'IT 312', course_name: 'Database Management Systems', units: 3, school_year: '2025-2026', semester: '1st', grade: '1.50' },
+    { enrollment_id: 3, student_id: 1, student_code: '2021-00001', student_name: 'Juan Dela Cruz', student_program: 'BS Information Technology', course_id: 3, course_code: 'IT 313', course_name: 'Information Assurance', units: 3, school_year: '2025-2026', semester: '1st', grade: '1.75' },
+    { enrollment_id: 4, student_id: 1, student_code: '2021-00001', student_name: 'Juan Dela Cruz', student_program: 'BS Information Technology', course_id: 4, course_code: 'IT 314', course_name: 'Systems Analysis and Design', units: 3, school_year: '2025-2026', semester: '1st', grade: null },
+    { enrollment_id: 5, student_id: 1, student_code: '2021-00001', student_name: 'Juan Dela Cruz', student_program: 'BS Information Technology', course_id: 5, course_code: 'IT 221', course_name: 'Object-Oriented Programming', units: 3, school_year: '2024-2025', semester: '2nd', grade: '1.75' },
+    { enrollment_id: 6, student_id: 1, student_code: '2021-00001', student_name: 'Juan Dela Cruz', student_program: 'BS Information Technology', course_id: 6, course_code: 'IT 222', course_name: 'Data Structures and Algorithms', units: 3, school_year: '2024-2025', semester: '2nd', grade: '2.00' },
+    { enrollment_id: 7, student_id: 2, student_code: '2021-00002', student_name: 'Maria Santos', student_program: 'BS Accountancy', course_id: 1, course_code: 'IT 311', course_name: 'Web Systems and Technologies', units: 3, school_year: '2025-2026', semester: '1st', grade: '1.50' }
+  ],
+  requests: [
+    { requestId: 48, studentId: 1, studentName: 'Juan Dela Cruz', documentType: 'Transcript of Records', copies: 1, requestDate: '2025-10-02', status: 'Processing' },
+    { requestId: 31, studentId: 1, studentName: 'Juan Dela Cruz', documentType: 'Certification', copies: 2, requestDate: '2025-09-18', status: 'Released' },
+    { requestId: 24, studentId: 1, studentName: 'Juan Dela Cruz', documentType: 'Certificate of Registration', copies: 1, requestDate: '2025-09-10', status: 'Pending' },
+    { requestId: 47, studentId: 2, studentName: 'Maria Santos', documentType: 'Certification', copies: 2, requestDate: '2025-10-01', status: 'Pending' },
+    { requestId: 46, studentId: 3, studentName: 'Paolo Gomez', documentType: 'Certificate of Registration', copies: 1, requestDate: '2025-09-25', status: 'Ready for release' }
+  ],
+  payments: [
+    { payment_id: 1, student_id: 1, student_code: '2021-00001', student_name: 'Juan Dela Cruz', student_program: 'BS Information Technology', amount: 1250.00, payment_date: '2025-09-15', or_number: 'OR-2025-0182', payment_type: 'Tuition' },
+    { payment_id: 2, student_id: 2, student_code: '2021-00002', student_name: 'Maria Santos', student_program: 'BS Accountancy', amount: 500.00, payment_date: '2025-09-20', or_number: 'OR-2025-0183', payment_type: 'Miscellaneous' }
+  ],
+  clearances: [
+    { clearance_id: 1, student_id: 1, student_code: '2021-00001', student_name: 'Juan Dela Cruz', student_program: 'BS Information Technology', department_id: 1, department_name: 'College of Computing Studies', status: 'Cleared', date_cleared: '2025-09-28' },
+    { clearance_id: 2, student_id: 1, student_code: '2021-00001', student_name: 'Juan Dela Cruz', student_program: 'BS Information Technology', department_id: 3, department_name: "Cashier's Office", status: 'Pending', date_cleared: null },
+    { clearance_id: 3, student_id: 1, student_code: '2021-00001', student_name: 'Juan Dela Cruz', student_program: 'BS Information Technology', department_id: 4, department_name: 'University Library', status: 'Cleared', date_cleared: '2025-10-01' },
+    { clearance_id: 4, student_id: 2, student_code: '2021-00002', student_name: 'Maria Santos', student_program: 'BS Accountancy', department_id: 1, department_name: 'College of Computing Studies', status: 'Pending', date_cleared: null },
+    { clearance_id: 5, student_id: 3, student_code: '2021-00003', student_name: 'Paolo Gomez', student_program: 'BS Information Technology', department_id: 1, department_name: 'College of Computing Studies', status: 'Hold', date_cleared: null }
+  ],
+  departments: [
+    { id: 1, name: 'College of Computing Studies' },
+    { id: 2, name: "Registrar's Office" },
+    { id: 3, name: "Cashier's Office" },
+    { id: 4, name: 'University Library' }
+  ]
+};
+
+function loadStore() {
+  try {
+    const raw = localStorage.getItem('ssis_portal_data_v1');
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return JSON.parse(JSON.stringify(INITIAL_STATE));
+}
+
+function saveStore() {
+  try {
+    localStorage.setItem('ssis_portal_data_v1', JSON.stringify(store));
+  } catch (e) {}
+}
+
+let store = loadStore();
+let flashAlert = null;
+
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem('ssis_session_v1');
+    if (raw) return JSON.parse(raw);
+  } catch (e) {}
+  return null;
+}
+
+function saveSession(sess) {
+  try {
+    if (sess) sessionStorage.setItem('ssis_session_v1', JSON.stringify(sess));
+    else sessionStorage.removeItem('ssis_session_v1');
+  } catch (e) {}
+}
+
+let session = loadSession();
+
+const ROLE_ALLOWED_PAGES = {
+  student: ['profile', 'grades', 'subjects', 'requests'],
+  registrar: ['enrollment', 'grades-encoding', 'admin-requests', 'profile'],
+  cashier: ['payments', 'receipts', 'profile'],
+  departmentstaff: ['clearance', 'profile'],
+  department: ['clearance', 'profile'],
+  administrator: ['admin-users', 'admin-requests', 'enrollment', 'grades-encoding', 'payments', 'receipts', 'clearance', 'profile']
+};
+
+const ROLE_LANDING_PAGE = {
+  student: 'profile',
+  registrar: 'enrollment',
+  cashier: 'payments',
+  departmentstaff: 'clearance',
+  department: 'clearance',
+  administrator: 'admin-users'
+};
+
+function getSectionsForRole(role) {
+  const norm = String(role || 'Student').toLowerCase().trim();
+  if (norm === 'student') {
+    return [
+      {
+        heading: 'Student Portal',
+        items: [
+          ['profile', 'Profile', ICONS.userRound],
+          ['grades', 'Grades', ICONS.graduationCap],
+          ['subjects', 'Subjects', ICONS.bookOpen]
+        ]
+      },
+      {
+        heading: 'Document Request System',
+        items: [
+          ['requests', 'Document requests', ICONS.fileText]
+        ]
+      }
+    ];
+  }
+  if (norm === 'registrar') {
+    return [
+      {
+        heading: 'Registrar Module',
+        items: [
+          ['enrollment', 'Enrollment', ICONS.userCheck],
+          ['grades-encoding', 'Grades encoding', ICONS.edit]
+        ]
+      },
+      {
+        heading: 'Document Request System',
+        items: [
+          ['admin-requests', 'Document requests', ICONS.fileText]
+        ]
+      }
+    ];
+  }
+  if (norm === 'cashier') {
+    return [
+      {
+        heading: 'Cashier Module',
+        items: [
+          ['payments', 'Payments', ICONS.creditCard],
+          ['receipts', 'Receipts', ICONS.receipt]
+        ]
+      }
+    ];
+  }
+  if (norm === 'departmentstaff' || norm === 'department') {
+    return [
+      {
+        heading: 'Department Module',
+        items: [
+          ['clearance', 'Clearance processing', ICONS.shieldCheck]
+        ]
+      }
+    ];
+  }
+  return [
+    {
+      heading: 'Admin Module',
+      items: [
+        ['admin-users', 'User accounts', ICONS.users]
+      ]
+    },
+    {
+      heading: 'Registrar Module',
+      items: [
+        ['enrollment', 'Enrollment', ICONS.userCheck],
+        ['grades-encoding', 'Grades encoding', ICONS.edit]
+      ]
+    },
+    {
+      heading: 'Cashier Module',
+      items: [
+        ['payments', 'Payments', ICONS.creditCard],
+        ['receipts', 'Receipts', ICONS.receipt]
+      ]
+    },
+    {
+      heading: 'Department Module',
+      items: [
+        ['clearance', 'Clearance', ICONS.shieldCheck]
+      ]
+    },
+    {
+      heading: 'Document Request System',
+      items: [
+        ['admin-requests', 'Document requests', ICONS.fileText]
+      ]
+    }
+  ];
+}
+
+function handleLogin(e) {
+  e.preventDefault();
+  const idInput = document.getElementById('student-id').value.trim();
+  const pwInput = document.getElementById('password').value;
+  const errBox = document.getElementById('login-error-alert');
+  const errText = document.getElementById('login-error-text');
+  errBox.style.display = 'none';
+
+  if (!idInput || !pwInput) {
+    errText.textContent = 'Please enter both your Student ID/Username and password.';
+    errBox.style.display = 'flex';
+    return;
+  }
+
+  const lower = idInput.toLowerCase();
+  const admin = store.admins.find(a => a.username.toLowerCase() === lower || a.code.toLowerCase() === lower || (a.username + '@cuyotech.edu').toLowerCase() === lower);
+  if (admin) {
+    if (pwInput !== admin.password && pwInput !== 'password123') {
+      errText.textContent = 'Invalid Student ID/Username or password. Default password is password123.';
+      errBox.style.display = 'flex';
+      return;
+    }
+    session = {
+      user_id: admin.code,
+      user_name: admin.name,
+      user_email: admin.username + '@cuyotech.edu',
+      role: admin.role,
+      admin_id: admin.id,
+      program: admin.department
+    };
+    saveSession(session);
+    const landing = ROLE_LANDING_PAGE[admin.role.toLowerCase()] || 'admin-users';
+    navigateTo(landing, true);
+    return;
+  }
+
+  const student = store.students.find(s =>
+    s.code.toLowerCase() === lower ||
+    s.enrollCode.toLowerCase() === lower ||
+    String(s.id) === lower ||
+    s.email.toLowerCase() === lower ||
+    s.email.split('@')[0].toLowerCase() === lower
+  );
+
+  if (student) {
+    if (student.status === 'Deactivated') {
+      errText.textContent = 'This student account is currently deactivated. Please contact the Registrar.';
+      errBox.style.display = 'flex';
+      return;
+    }
+    if (pwInput !== student.password && pwInput !== 'password123') {
+      errText.textContent = 'Invalid Student ID/Username or password. Default password is password123.';
+      errBox.style.display = 'flex';
+      return;
+    }
+    session = {
+      user_id: student.code,
+      student_id: student.id,
+      user_name: student.firstName + ' ' + student.lastName,
+      user_email: student.email,
+      program: student.program,
+      year_level: student.yearLevel,
+      address: student.address,
+      role: 'Student'
+    };
+    saveSession(session);
+    navigateTo('profile', true);
+    return;
+  }
+
+  errText.textContent = 'Invalid Student ID/Username or password. Default password is password123.';
+  errBox.style.display = 'flex';
+}
+
+function handleLogout(e) {
+  if (e) e.preventDefault();
+  session = null;
+  saveSession(null);
+  history.replaceState(null, '', window.location.pathname);
+  renderApp();
+  return false;
+}
+
+function navClick(e, page) {
+  if (e) e.preventDefault();
+  flashAlert = null;
+  navigateTo(page, true);
+  return false;
+}
+
+function navigateTo(page, pushUrl = false) {
+  if (!session) {
+    renderApp();
+    return;
+  }
+  const normRole = String(session.role || 'Student').toLowerCase().trim();
+  const allowed = ROLE_ALLOWED_PAGES[normRole] || ROLE_ALLOWED_PAGES.student;
+  const target = allowed.includes(page) ? page : (ROLE_LANDING_PAGE[normRole] || 'profile');
+
+  if (pushUrl) {
+    history.pushState({ page: target }, '', '?page=' + target);
+  }
+  document.querySelector('.sidebar')?.classList.remove('open');
+  renderApp(target);
+}
+
+window.addEventListener('popstate', () => {
+  const params = new URLSearchParams(window.location.search);
+  renderApp(params.get('page') || undefined);
+});
+
+function renderApp(requestedPage) {
+  const authView = document.getElementById('auth-view');
+  const appShell = document.getElementById('app-shell');
+
+  if (!session) {
+    document.title = 'Sign in — CuyoTech SSIS';
+    appShell.style.display = 'none';
+    document.getElementById('content-inner').innerHTML = '';
+    authView.style.display = 'block';
+    return;
+  }
+
+  authView.style.display = 'none';
+  appShell.style.display = 'flex';
+
+  const normRole = String(session.role || 'Student').toLowerCase().trim();
+  const isAdmin = normRole !== 'student';
+  const allowed = ROLE_ALLOWED_PAGES[normRole] || ROLE_ALLOWED_PAGES.student;
+  const params = new URLSearchParams(window.location.search);
+  const urlPage = requestedPage || params.get('page') || ROLE_LANDING_PAGE[normRole] || 'profile';
+  const currentPage = allowed.includes(urlPage) ? urlPage : (ROLE_LANDING_PAGE[normRole] || 'profile');
+
+  const pageTitleLabel = currentPage.charAt(0).toUpperCase() + currentPage.slice(1).replace(/-/g, ' ');
+  document.title = `${pageTitleLabel} — CuyoTech SSIS`;
+
+  // Sidebar user info
+  const initials = String(session.user_name || 'JD').substring(0, 2).toUpperCase();
+  document.getElementById('sidebar-initials').textContent = initials;
+  document.getElementById('sidebar-name').textContent = session.user_name;
+  document.getElementById('sidebar-role-id').textContent = `${session.role} · ${session.user_id}`;
+
+  // Sidebar & mobile nav
+  const sections = getSectionsForRole(session.role);
+  let navHtml = '';
+  let mobileHtml = '';
+  sections.forEach((sec, idx) => {
+    navHtml += `<nav class="nav-group${isAdmin ? ' admin-nav' : ''}" style="${idx > 0 ? 'margin-top:16px;' : ''}">`;
+    navHtml += `<span class="nav-label">${esc(sec.heading)}</span>`;
+    sec.items.forEach(([id, label, icon]) => {
+      const active = currentPage === id ? ' active' : '';
+      navHtml += `<a href="?page=${id}" onclick="return navClick(event, '${id}')" class="nav-item${active}">${icon}${esc(label)}</a>`;
+      const shortLabel = label === 'Document requests' ? 'Requests' : label;
+      mobileHtml += `<a href="?page=${id}" onclick="return navClick(event, '${id}')" class="mobile-nav-item${active}">${icon}<span>${esc(shortLabel)}</span></a>`;
+    });
+    navHtml += `</nav>`;
+  });
+  document.getElementById('sidebar-nav-container').innerHTML = navHtml;
+  document.getElementById('mobile-nav-container').innerHTML = mobileHtml;
+
+  const container = document.getElementById('content-inner');
+  if (currentPage === 'profile') renderProfilePage(container);
+  else if (currentPage === 'grades') renderGradesPage(container);
+  else if (currentPage === 'subjects') renderSubjectsPage(container);
+  else if (currentPage === 'requests') renderStudentRequestsPage(container);
+  else if (currentPage === 'enrollment') renderEnrollmentPage(container);
+  else if (currentPage === 'grades-encoding') renderGradesEncodingPage(container);
+  else if (currentPage === 'payments') renderPaymentsPage(container);
+  else if (currentPage === 'receipts') renderReceiptsPage(container);
+  else if (currentPage === 'clearance') renderClearancePage(container);
+  else if (currentPage === 'admin-users') renderAdminUsersPage(container);
+  else if (currentPage === 'admin-requests') renderAdminRequestsPage(container);
+}
+
+function renderFlashAlert() {
+  if (!flashAlert) return '';
+  const alert = flashAlert;
+  flashAlert = null;
+  const icon = alert.type === 'error' ? ICONS.alertCircle : ICONS.check;
+  return `<div class="form-alert ${esc(alert.type)}">${icon}<span>${alert.html}</span><button onclick="this.parentElement.style.display='none'">${ICONS.x}</button></div>`;
+}
+
+/* ── 1. Student Profile Page (views/student/profile.php) ── */
+function renderProfilePage(container) {
+  const student = store.students.find(s => s.id === (session.student_id || 1)) || store.students[0];
+  const userName = session.student_id ? `${student.firstName} ${student.lastName}` : session.user_name;
+  const userEmail = session.student_id ? student.email : session.user_email;
+  const userId = session.student_id ? student.code : session.user_id;
+  const program = session.student_id ? student.program : (session.program || 'BS Information Technology');
+  const year = session.student_id ? student.yearLevel : 3;
+  const yearText = { 1: '1st year', 2: '2nd year', 3: '3rd year', 4: '4th year' }[year] || '3rd year';
+  const address = session.student_id ? student.address : 'Brgy. San Pedro, Puerto Princesa City, Palawan 5300';
+
+  const clearances = store.clearances.filter(c => c.student_id === (session.student_id || 1));
+
+  let clearanceHtml = '';
+  if (clearances.length > 0) {
+    let rows = '';
+    clearances.forEach(cl => {
+      const tone = cl.status === 'Cleared' ? 'success' : (cl.status === 'Hold' ? 'danger' : 'warning');
+      const label = cl.status === 'Hold' ? 'On Hold' : cl.status;
+      const dateStr = cl.date_cleared ? new Date(cl.date_cleared + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '—';
+      let remarkHtml = `<span style="color:#a6631b;font-size:12px;">Awaiting office evaluation</span>`;
+      if (cl.status === 'Cleared') remarkHtml = `<span style="color:#26593b;font-size:12px;font-weight:600;">No pending obligations</span>`;
+      else if (cl.status === 'Hold') remarkHtml = `<span style="color:#b42318;font-size:12px;font-weight:600;">Action required — visit office</span>`;
+
+      rows += `<tr>
+        <td><strong>${esc(cl.department_name)}</strong></td>
+        <td>${statusBadge(label, tone)}</td>
+        <td>${esc(dateStr)}</td>
+        <td>${remarkHtml}</td>
+      </tr>`;
+    });
+
+    clearanceHtml = `
+      <section class="card table-card" style="margin-top:24px;">
+        <div class="card-heading">
+          <div>
+            <h2>Departmental clearance status</h2>
+            <p>Live clearance evaluation across university offices required for document release and enrollment.</p>
+          </div>
+          <span class="muted-label">${clearances.length} offices</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Department / Office</th>
+                <th>Clearance Status</th>
+                <th>Date Cleared</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </section>`;
+  }
+
+  container.innerHTML = `
+    ${pageHeader('Profile', 'Manage your student details and account security.')}
+    ${renderFlashAlert()}
+    <div class="profile-grid">
+      <section class="card">
+        <div class="card-heading">
+          <div><h2>Student details</h2><p>Official student records and enrolled program information.</p></div>
+        </div>
+        <div class="profile-picture-section">
+          <div class="profile-avatar-large" title="Profile picture">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="38" height="38" fill="currentColor">
+              <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+            </svg>
+          </div>
+          <div class="profile-picture-info">
+            <strong>${esc(userName)}</strong>
+            <span>${esc(program)}</span>
+            <small>${esc(userId)}</small>
+          </div>
+        </div>
+        <dl class="detail-list">
+          <div><dt>Student ID</dt><dd>${esc(userId)}</dd></div>
+          <div><dt>Full name</dt><dd>${esc(userName)}</dd></div>
+          <div><dt>Email address</dt><dd>${esc(userEmail)}</dd></div>
+          <div><dt>Program</dt><dd>${esc(program)}</dd></div>
+          <div><dt>Year level</dt><dd>${esc(yearText)}</dd></div>
+          <div><dt>Contact number</dt><dd>+63 917 555 0182</dd></div>
+          <div><dt>Address</dt><dd>${esc(address)}</dd></div>
+        </dl>
+      </section>
+      <section class="card">
+        <div class="card-heading">
+          <div><h2>Change password</h2><p>Keep your account secure with a strong password.</p></div>
+          ${ICONS.keyRound}
+        </div>
+        <form id="form-change-password" onsubmit="submitChangePassword(event)">
+          <div class="field">
+            <label for="cur_pw">Current password</label>
+            <div class="input-action">
+              <input type="password" id="cur_pw" name="current_password" required autocomplete="current-password">
+              <button type="button" onclick="togglePw(this)">Show</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="new_pw">New password</label>
+            <div class="input-action">
+              <input type="password" id="new_pw" name="new_password" required autocomplete="new-password">
+              <button type="button" onclick="togglePw(this)">Show</button>
+            </div>
+            <div class="pw-checklist" id="pw-checklist">
+              <div class="pw-check-item" id="chk-len">${ICONS.check} 8+ characters</div>
+              <div class="pw-check-item" id="chk-num">${ICONS.check} At least 1 number</div>
+              <div class="pw-check-item" id="chk-sym">${ICONS.check} 1 special symbol</div>
+              <div class="pw-check-item" id="chk-match">${ICONS.check} Passwords match</div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="conf_pw">Confirm new password</label>
+            <div class="input-action">
+              <input type="password" id="conf_pw" name="confirm_password" required autocomplete="new-password">
+              <button type="button" onclick="togglePw(this)">Show</button>
+            </div>
+          </div>
+          <button type="submit" class="button primary no-spin" id="btn-update-pw">Update password</button>
+        </form>
+      </section>
+    </div>
+    ${clearanceHtml}
+  `;
+
+  const newPw = document.getElementById('new_pw');
+  const confPw = document.getElementById('conf_pw');
+  function validatePassword() {
+    const val = newPw ? newPw.value : '';
+    const conf = confPw ? confPw.value : '';
+    document.getElementById('chk-len')?.classList.toggle('valid', val.length >= 8);
+    document.getElementById('chk-num')?.classList.toggle('valid', /\d/.test(val));
+    document.getElementById('chk-sym')?.classList.toggle('valid', /[^A-Za-z0-9]/.test(val));
+    document.getElementById('chk-match')?.classList.toggle('valid', val.length > 0 && val === conf);
+  }
+  newPw?.addEventListener('input', validatePassword);
+  confPw?.addEventListener('input', validatePassword);
+}
+
+function submitChangePassword(e) {
+  e.preventDefault();
+  const cur = document.getElementById('cur_pw').value;
+  const nw = document.getElementById('new_pw').value;
+  const cf = document.getElementById('conf_pw').value;
+  if (!cur || !nw || !cf) {
+    flashAlert = { type: 'error', html: 'All password fields are required.' };
+  } else if (nw.length < 8) {
+    flashAlert = { type: 'error', html: 'New password must be at least 8 characters long.' };
+  } else if (nw !== cf) {
+    flashAlert = { type: 'error', html: 'New password and confirmation do not match.' };
+  } else {
+    const student = store.students.find(s => s.id === (session.student_id || 1));
+    if (student) {
+      student.password = nw;
+      saveStore();
+    }
+    flashAlert = { type: 'success', html: '<strong>Password updated successfully!</strong> Your new password has been saved.' };
+  }
+  renderApp('profile');
+}
+
+/* ── 2. Student Grades Page (views/student/grades.php) ── */
+function getRemarkAndTone(grade) {
+  if (!grade) return ['In Progress', 'warning'];
+  const gUpper = String(grade).toUpperCase().trim();
+  if (gUpper === 'INC') return ['Incomplete', 'warning'];
+  if (gUpper === 'DRP') return ['Dropped', 'danger'];
+  const num = parseFloat(grade);
+  if (!isNaN(num)) {
+    return num <= 3.0 ? ['Passed', 'success'] : ['Failed', 'danger'];
+  }
+  return ['Passed', 'success'];
+}
+
+function calcGpa(list) {
+  let pts = 0, units = 0;
+  list.forEach(e => {
+    if (e.grade && !isNaN(parseFloat(e.grade))) {
+      pts += parseFloat(e.grade) * (e.units || 3);
+      units += (e.units || 3);
+    }
+  });
+  return units > 0 ? (pts / units).toFixed(2) : null;
+}
+
+function renderGradesPage(container) {
+  const sid = session.student_id || 1;
+  const studentEnrolls = store.enrollments.filter(e => e.student_id === sid);
+  const sem1 = studentEnrolls.filter(e => e.school_year === '2025-2026' && e.semester === '1st');
+  const sem2 = studentEnrolls.filter(e => !(e.school_year === '2025-2026' && e.semester === '1st'));
+
+  let totalWeighted = 0, gradedUnits = 0, totalUnits = 0, passedUnits = 0, hasFailing = false;
+  [sem1, sem2].forEach(list => {
+    list.forEach(e => {
+      const u = Number(e.units || 3);
+      totalUnits += u;
+      if (e.grade && !isNaN(parseFloat(e.grade))) {
+        const g = parseFloat(e.grade);
+        totalWeighted += g * u;
+        gradedUnits += u;
+        if (g <= 3.0) passedUnits += u;
+        else hasFailing = true;
+      } else {
+        const [rem] = getRemarkAndTone(e.grade);
+        if (rem === 'Passed') passedUnits += u;
+        else if (rem === 'Failed' || rem === 'Dropped') hasFailing = true;
+      }
+    });
+  });
+
+  const cgpa = (gradedUnits > 0 && totalWeighted > 0) ? (totalWeighted / gradedUnits).toFixed(2) : '1.65';
+  const standing = (parseFloat(cgpa) <= 1.75 && !hasFailing) ? "Dean's Lister Candidate" : "Good Academic Standing";
+  const gpa1 = calcGpa(sem1) || '1.50';
+  const gpa2 = calcGpa(sem2) || '1.88';
+
+  const renderRows = list => list.map(e => {
+    const [rem, tone] = getRemarkAndTone(e.grade);
+    return `<tr>
+      <td class="code-cell">${esc(e.course_code)}</td>
+      <td>${esc(e.course_name)}</td>
+      <td>${esc(e.units)}</td>
+      <td>${esc(e.grade || '—')}</td>
+      <td>${statusBadge(rem, tone)}</td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    ${pageHeader('Grades', 'View your academic performance and grades by semester.', `<button class='button outline' onclick='window.print()' style='display:inline-flex;align-items:center;gap:6px;'>${ICONS.printer} Print Grade Slip</button>`)}
+    <div class="grades-summary-strip">
+      <div class="grades-summary-item">
+        <span>Cumulative GPA (CGPA)</span>
+        <strong>${esc(cgpa)}</strong>
+        <small>General Weighted Average</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Total Earned Units</span>
+        <strong>${passedUnits} <small style="font-size:14px;color:var(--muted);font-weight:normal;">/ ${totalUnits} units</small></strong>
+        <small>Enrolled Course Units</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Academic Standing</span>
+        <strong style="font-size:18px;color:#26593b;">${esc(standing)}</strong>
+        <small>CuyoTech Academic Registry</small>
+      </div>
+    </div>
+
+    <div class="grades-filter-bar">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:13px;font-weight:650;color:var(--black);">Filter by Academic Year:</span>
+        <div class="select-wrap compact-select">
+          <select id="grades-year-filter" onchange="filterGradesByYear(this.value)">
+            <option value="all">All academic years</option>
+            <option value="2025-2026">Academic Year 2025–2026</option>
+            <option value="2024-2025">Academic Year 2024–2025</option>
+          </select>
+          ${ICONS.chevronDown}
+        </div>
+      </div>
+    </div>
+
+    <section class="card grades-card" data-academic-year="2025-2026" data-sem="sem1">
+      <div class="semester-heading">
+        <div><h2>First semester · 2025–2026</h2><p>Released February 14, 2026</p></div>
+        <div class="gpa"><span>Semester GPA</span><strong>${esc(gpa1)}</strong></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Code</th><th>Subject</th><th>Units</th><th>Grade</th><th>Remarks</th></tr></thead>
+          <tbody>${renderRows(sem1)}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card grades-card" data-academic-year="2024-2025" data-sem="sem2">
+      <div class="semester-heading">
+        <div><h2>Second semester · 2024–2025</h2><p>Released July 28, 2025</p></div>
+        <div class="gpa"><span>Semester GPA</span><strong>${esc(gpa2)}</strong></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Code</th><th>Subject</th><th>Units</th><th>Grade</th><th>Remarks</th></tr></thead>
+          <tbody>${renderRows(sem2)}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card grade-legend-card">
+      <h3>Grade legends</h3>
+      <div class="grade-legend-grid">
+        <div class="grade-legend-col">
+          <table class="grade-legend-table">
+            <thead><tr><th>Grade</th><th>Equivalent</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><strong>1.00</strong></td><td>97 – 100</td><td>Excellent</td></tr>
+              <tr><td><strong>1.25</strong></td><td>94 – 96</td><td>Superior</td></tr>
+              <tr><td><strong>1.50</strong></td><td>91 – 93</td><td>Very Good</td></tr>
+              <tr><td><strong>1.75</strong></td><td>88 – 90</td><td>Good</td></tr>
+              <tr><td><strong>2.00</strong></td><td>85 – 87</td><td>Very Satisfactory</td></tr>
+              <tr><td><strong>2.25</strong></td><td>82 – 84</td><td>Satisfactory</td></tr>
+              <tr><td><strong>2.50</strong></td><td>79 – 81</td><td>Fairly Satisfactory</td></tr>
+              <tr><td><strong>2.75</strong></td><td>76 – 78</td><td>Fair</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grade-legend-col">
+          <table class="grade-legend-table">
+            <thead><tr><th>Grade</th><th>Equivalent</th><th>Description</th></tr></thead>
+            <tbody>
+              <tr><td><strong>3.00</strong></td><td>75</td><td>Passed</td></tr>
+              <tr><td><strong>4.00</strong></td><td>65 – 74</td><td>Conditional</td></tr>
+              <tr><td><strong>5.00</strong></td><td>Below 65</td><td>Failed</td></tr>
+              <tr><td><strong>INC</strong></td><td>—</td><td>Incomplete</td></tr>
+              <tr><td><strong>DRP</strong></td><td>—</td><td>Dropped</td></tr>
+              <tr><td><strong>W</strong></td><td>—</td><td>Withdrawn</td></tr>
+              <tr><td><strong>IP</strong></td><td>—</td><td>In Progress</td></tr>
+              <tr><td><strong>NG</strong></td><td>—</td><td>No Grade</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="grading-note" style="margin-top:14px;margin-bottom:0;">1.00 is the highest mark and 3.00 is the minimum passing grade.</p>
+    </section>
+  `;
+}
+
+function filterGradesByYear(value) {
+  document.querySelectorAll('.grades-card[data-academic-year]').forEach(card => {
+    card.style.display = (value === 'all' || card.getAttribute('data-academic-year') === value) ? '' : 'none';
+  });
+}
+
+/* ── 3. Student Subjects Page (views/student/subjects.php) ── */
+function renderSubjectsPage(container) {
+  const sid = session.student_id || 1;
+  const studentEnrolls = store.enrollments.filter(e => e.student_id === sid && e.school_year === '2025-2026');
+  const courses = studentEnrolls.length > 0
+    ? studentEnrolls.map(e => store.courses.find(c => c.id === e.course_id) || { code: e.course_code, name: e.course_name, units: e.units, schedule: 'MWF · 8:00–9:00 AM', room: 'ICT 101', instructor: 'Faculty' })
+    : store.courses.slice(0, 4);
+
+  const totalUnits = courses.reduce((sum, c) => sum + Number(c.units || 3), 0);
+  const program = session.program || 'BS Information Technology';
+  const yearText = 'Year ' + (session.year_level || 3);
+
+  const rows = courses.map(c => `
+    <tr>
+      <td class="code-cell">${esc(c.code)}</td>
+      <td><strong>${esc(c.name)}</strong></td>
+      <td>${esc(c.units)}</td>
+      <td>${esc(c.schedule)}</td>
+      <td>${esc(c.room)}</td>
+      <td>${esc(c.instructor)}</td>
+    </tr>
+  `).join('');
+
+  container.innerHTML = `
+    ${pageHeader('Subjects', `First semester · Academic year 2025–2026 · ${totalUnits} total units`, `<button class='button outline' onclick='window.print()' style='display:inline-flex;align-items:center;gap:6px;'>${ICONS.printer} Print Study Load</button>`)}
+    <div class="grades-summary-strip">
+      <div class="grades-summary-item">
+        <span>Enrolled Subjects</span>
+        <strong>${courses.length}</strong>
+        <small>Active Course Load</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Total Units</span>
+        <strong>${totalUnits} <small style="font-size:14px;color:var(--muted);font-weight:normal;">units</small></strong>
+        <small>First Semester · AY 2025–2026</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Program &amp; Year</span>
+        <strong style="font-size:16px;color:#26593b;">${esc(program)}</strong>
+        <small>${esc(yearText)} · Regular Load</small>
+      </div>
+    </div>
+
+    <section class="card table-card">
+      <div class="card-heading">
+        <div><h2>Enrolled subjects</h2><p>${esc(program)} · ${esc(yearText)} · Academic Year 2025–2026</p></div>
+        <span class="muted-label">${courses.length} subjects</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Code</th><th>Subject</th><th>Units</th><th>Schedule</th><th>Room</th><th>Instructor</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+/* ── 4. Student Document Requests Page (views/student/requests.php) ── */
+function formatReqId(id) {
+  return 'DR-2025-' + String(id).padStart(4, '0');
+}
+
+function getReqFee(docType, copies) {
+  const unit = docType === 'Transcript of Records' ? 100 : (docType === 'Certification' ? 75 : 50);
+  return '₱ ' + (unit * Math.max(1, Number(copies || 1))).toFixed(2);
+}
+
+function getReqStatusMeta(status) {
+  const s = String(status || 'Pending');
+  if (s === 'Pending') return ['Payment pending', 'pending', 'Confirm payment'];
+  if (s === 'Processing') return ['Processing', 'warning', 'Mark ready'];
+  if (s === 'Ready for release' || s === 'Ready') return ['Ready for release', 'success', 'Mark released'];
+  if (s === 'Released') return ['Released', 'success', 'Completed'];
+  if (s === 'Cancelled') return ['Cancelled', 'danger', 'Completed'];
+  if (s === 'Rejected') return ['Rejected', 'danger', 'Completed'];
+  return [s, 'warning', 'Completed'];
+}
+
+function renderStudentRequestsPage(container) {
+  const sid = session.student_id || 1;
+  const requests = store.requests.filter(r => r.studentId === sid);
+  let activeReq = requests.find(r => ['Pending', 'Processing', 'Ready for release', 'Ready'].includes(r.status)) || requests[0];
+
+  let trackerHtml = '';
+  if (activeReq && !['Cancelled', 'Rejected'].includes(activeReq.status)) {
+    const stepMap = { 'Pending': 1, 'Processing': 2, 'Ready for release': 3, 'Ready': 3, 'Released': 5 };
+    const stepIdx = stepMap[activeReq.status] ?? 0;
+    const [lbl, tone] = getReqStatusMeta(activeReq.status);
+    const reqDateStr = new Date((activeReq.requestDate || '2025-10-02') + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+    trackerHtml = `
+      <div class="active-tracker-card">
+        <div class="active-tracker-header">
+          <div class="active-tracker-title">
+            <h3>Live Request Status: ${esc(activeReq.documentType)}</h3>
+            <p>Reference: <strong class="code-cell">${esc(formatReqId(activeReq.requestId))}</strong> · Requested on ${esc(reqDateStr)}</p>
+          </div>
+          <div class="active-tracker-badges">
+            ${statusBadge(lbl, tone)}
+          </div>
+        </div>
+        ${tracker(stepIdx)}
+      </div>`;
+  }
+
+  const docs = [
+    ['Certificate of Registration', 'Proof of current enrollment', '₱ 50.00', 'Estimated fulfillment: 1 business day · Instant verification'],
+    ['Transcript of Records', 'Official record of academic performance', '₱ 100.00', 'Estimated fulfillment: 3–5 business days · Official dry seal'],
+    ['Certification', 'General student certification', '₱ 75.00', 'Estimated fulfillment: 2–3 business days · Signed by Registrar']
+  ];
+
+  const docOptionsHtml = docs.map((d, i) => {
+    const id = 'doc_' + d[0].replace(/\W+/g, '_');
+    return `
+      <input type="radio" class="doc-option-input" name="doc_type" id="${id}" value="${esc(d[0])}" ${i === 0 ? 'checked' : ''} onchange="updateRequestPrice()">
+      <label for="${id}" class="doc-option">
+        <span class="radio-mark"><span class="radio-inner"></span></span>
+        <span class="doc-copy">
+          <strong>${esc(d[0])}</strong>
+          <small>${esc(d[1])}</small>
+          <small style="display:block;margin-top:4px;color:var(--sage-dark);font-weight:600;font-size:11px;">${esc(d[3])}</small>
+        </span>
+        <span class="doc-price">${esc(d[2])}<small>per copy</small></span>
+      </label>`;
+  }).join('');
+
+  const historyRows = requests.map(rq => {
+    const [lbl, tone] = getReqStatusMeta(rq.status);
+    const actionBtn = rq.status === 'Pending'
+      ? `<button type="button" class="cancel-button" onclick="confirmCancelRequest(${rq.requestId}, '${esc(formatReqId(rq.requestId))}')">Cancel</button>`
+      : `<span style="color:#64756a;">—</span>`;
+    return `<tr>
+      <td class="code-cell">${esc(formatReqId(rq.requestId))}</td>
+      <td>${esc(rq.documentType)}</td>
+      <td>${esc(rq.copies)}</td>
+      <td>${esc(getReqFee(rq.documentType, rq.copies))}</td>
+      <td>${statusBadge(lbl, tone)}</td>
+      <td>${actionBtn}</td>
+    </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    ${pageHeader('Document requests', 'Request official school documents without visiting the registrar.')}
+    ${renderFlashAlert()}
+    ${trackerHtml}
+    <section class="card request-form">
+      <form onsubmit="submitStudentRequest(event)">
+        <div class="card-heading">
+          <div><h2>New request</h2><p>Select a document and tell us how you'll use it.</p></div>
+          <span class="required-note">All fields required</span>
+        </div>
+        <div class="doc-options">${docOptionsHtml}</div>
+        <div class="form-grid">
+          <div class="field">
+            <label for="purpose">Purpose</label>
+            <div class="select-wrap">
+              <select id="purpose" name="purpose">
+                <option>Scholarship application</option>
+                <option>Employment</option>
+                <option>Personal copy</option>
+              </select>
+              ${ICONS.chevronDown}
+            </div>
+          </div>
+          <div class="field">
+            <label for="copies">Copies</label>
+            <input type="number" id="copies" name="copies" min="1" max="5" value="1" oninput="updateRequestPrice()" onchange="updateRequestPrice()">
+          </div>
+          <div class="field">
+            <label for="delivery">Delivery method</label>
+            <div class="select-wrap">
+              <select id="delivery" name="delivery">
+                <option>Pick up at registrar</option>
+                <option>Courier delivery</option>
+              </select>
+              ${ICONS.chevronDown}
+            </div>
+          </div>
+        </div>
+        <div class="request-footer">
+          <div>
+            <span>Total to pay</span>
+            <strong id="request-total-price">₱ 50.00</strong>
+          </div>
+          <button type="submit" class="button primary no-spin">Submit request ${ICONS.arrowRight}</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card table-card">
+      <div class="card-heading">
+        <div><h2>Request history</h2><p>View the progress and status of your requested university credentials.</p></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Request</th><th>Document</th><th>Copies</th><th>Fee</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>${historyRows || `<tr><td colspan="6" style="text-align:center;color:#64756A;padding:24px;">No requests submitted yet.</td></tr>`}</tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function updateRequestPrice() {
+  const checked = document.querySelector('.doc-option-input:checked');
+  const copiesEl = document.getElementById('copies');
+  const priceEl = document.getElementById('request-total-price');
+  if (!priceEl) return;
+  const docType = checked ? checked.value : 'Certificate of Registration';
+  const copies = copiesEl ? Math.max(1, parseInt(copiesEl.value, 10) || 1) : 1;
+  priceEl.textContent = getReqFee(docType, copies);
+}
+
+function submitStudentRequest(e) {
+  e.preventDefault();
+  const checked = document.querySelector('.doc-option-input:checked');
+  const docType = checked ? checked.value : 'Certificate of Registration';
+  const copies = parseInt(document.getElementById('copies').value, 10);
+  if (isNaN(copies) || copies < 1 || copies > 5) {
+    flashAlert = { type: 'error', html: '<strong>Invalid number of copies.</strong> Please request between 1 and 5 copies.' };
+    renderApp('requests');
+    return;
+  }
+  const newId = Math.floor(100 + Math.random() * 899);
+  store.requests.unshift({
+    requestId: newId,
+    studentId: session.student_id || 1,
+    studentName: session.user_name || 'Juan Dela Cruz',
+    documentType: docType,
+    copies: copies,
+    requestDate: new Date().toISOString().split('T')[0],
+    status: 'Pending'
+  });
+  saveStore();
+  flashAlert = { type: 'success', html: `<strong>Request submitted successfully!</strong> Your reference is ${esc(formatReqId(newId))}.` };
+  renderApp('requests');
+}
+
+function confirmCancelRequest(reqId, formattedId) {
+  showConfirmModal({
+    title: 'Cancel Document Request',
+    message: 'Are you sure you want to cancel request ' + formattedId + '? This action cannot be undone.',
+    confirmText: 'Yes, cancel request',
+    tone: 'danger',
+    onConfirm: function() {
+      const rq = store.requests.find(r => r.requestId === reqId);
+      if (rq) {
+        rq.status = 'Cancelled';
+        saveStore();
+      }
+      flashAlert = { type: 'success', html: '<strong>Request cancelled.</strong> The document request has been updated to Cancelled.' };
+      renderApp('requests');
+    }
+  });
+}
+
+/* ── 5. Registrar Enrollment Page (views/registrar/enrollment.php) ── */
+function renderEnrollmentPage(container) {
+  const enrollments = store.enrollments;
+  const students = store.students;
+  const courses = store.courses;
+
+  const rows = enrollments.map(en => `
+    <tr class="enroll-row"
+        data-text="${esc((en.student_code + ' ' + en.student_name + ' ' + en.course_code + ' ' + en.course_name).toLowerCase())}"
+        data-term="${esc(en.school_year + ' ' + en.semester)}">
+      <td class="code-cell">${esc(en.student_code)}</td>
+      <td><strong>${esc(en.student_name)}</strong></td>
+      <td>${esc(en.student_program)}</td>
+      <td>
+        <strong>${esc(en.course_code)}</strong>
+        <small class="table-subtext">${esc(en.course_name)}</small>
+      </td>
+      <td>${esc(en.units)}</td>
+      <td>${esc(en.school_year + ' · ' + en.semester)}</td>
+      <td>${en.grade ? `<span style="font-weight:600;color:#26593b;">${esc(en.grade)}</span>` : `<span style="color:#64756A;">—</span>`}</td>
+      <td>
+        <button type="button" class="reject-button" onclick="confirmDropEnrollment(${en.enrollment_id}, '${esc(en.student_name)}', '${esc(en.course_code)}')">Drop</button>
+      </td>
+    </tr>
+  `).join('');
+
+  const studentItems = students.map(st => `
+    <li class="combobox-item"
+        data-id="${st.id}"
+        data-code="${esc(st.enrollCode)}"
+        data-name="${esc(st.firstName + ' ' + st.lastName)}"
+        data-label="${esc(st.enrollCode + ' — ' + st.firstName + ' ' + st.lastName)}"
+        data-search="${esc((st.enrollCode + ' ' + st.code + ' ' + st.firstName + ' ' + st.lastName + ' ' + st.program).toLowerCase())}">
+      <div>
+        <strong>${esc(st.firstName + ' ' + st.lastName)}</strong>
+        <div style="font-size:11px;color:var(--muted);">${esc(st.program)}</div>
+      </div>
+      <small>${esc(st.enrollCode)}</small>
+    </li>
+  `).join('');
+
+  const courseOptions = courses.map(cs => `<option value="${cs.id}">${esc(cs.code + ' — ' + cs.name + ' (' + cs.units + ' units)')}</option>`).join('');
+
+  container.innerHTML = `
+    ${pageHeader('Enrollment', 'Manage student course registrations and curriculum enrollment.', `<button class='button primary' onclick="openModal('modal-enroll-student')">Enroll student ${ICONS.plus}</button>`)}
+    ${renderFlashAlert()}
+    <div class="grades-summary-strip">
+      <div class="grades-summary-item">
+        <span>Total Enrollments</span>
+        <strong>${enrollments.length}</strong>
+        <small>Registered Student Subjects</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Active Students</span>
+        <strong>${students.length}</strong>
+        <small>Eligible for Course Registration</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Available Courses</span>
+        <strong style="color:#26593b;">${courses.length}</strong>
+        <small>Curriculum Subject Catalog</small>
+      </div>
+    </div>
+
+    <section class="card table-card">
+      <div class="toolbar">
+        <div class="search-input">
+          ${ICONS.search}
+          <input type="text" id="enrollment-search-input" placeholder="Search by student, ID, or course" oninput="filterEnrollments()">
+        </div>
+        <div class="select-wrap compact-select">
+          <select id="enrollment-term-select" onchange="filterEnrollments()">
+            <option value="">All terms</option>
+            <option value="2025-2026 1st">2025–2026 · 1st Sem</option>
+            <option value="2025-2026 2nd">2025–2026 · 2nd Sem</option>
+            <option value="2024-2025 2nd">2024–2025 · 2nd Sem</option>
+          </select>
+          ${ICONS.chevronDown}
+        </div>
+        <span class="toolbar-caption" id="enroll-count-caption" style="margin-left:auto;">${enrollments.length} records</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Student Name</th>
+              <th>Program</th>
+              <th>Course</th>
+              <th>Units</th>
+              <th>Term</th>
+              <th>Grade</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+            <tr id="enroll-empty-row" class="search-empty-row" style="display:none;">
+              <td colspan="8">
+                ${ICONS.search}
+                <strong>No enrollment records found</strong>
+                <span>Try searching for another student name, course code, or selecting another academic term.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="modal-enroll-student" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal('modal-enroll-student')">
+      <div class="modal" onclick="event.stopPropagation()">
+        <form onsubmit="submitEnrollStudent(event)">
+          <div class="modal-heading">
+            <div><h2>Enroll student</h2><p>Register a student into an academic course for the term.</p></div>
+            <button type="button" onclick="closeModal('modal-enroll-student')">${ICONS.x}</button>
+          </div>
+          <div class="modal-grid">
+            <div class="field">
+              <label for="enr_student_input">Student</label>
+              <div class="combobox-wrap" id="enr-student-combobox">
+                <input type="hidden" name="student_id" id="enr_student_id">
+                <input type="text" id="enr_student_input" name="student_search" class="combobox-input" placeholder="Search by name or student ID..." autocomplete="off" required>
+                <ul class="combobox-menu" id="enr_student_menu">${studentItems}</ul>
+              </div>
+            </div>
+            <div class="field">
+              <label for="enr_course">Course subject</label>
+              <div class="select-wrap">
+                <select id="enr_course" name="course_id" required>
+                  <option value="">Select subject</option>
+                  ${courseOptions}
+                </select>
+                ${ICONS.chevronDown}
+              </div>
+            </div>
+            <div class="field">
+              <label for="enr_sy">School year</label>
+              <div class="select-wrap">
+                <select id="enr_sy" name="school_year">
+                  <option value="2025-2026" selected>2025–2026</option>
+                  <option value="2024-2025">2024–2025</option>
+                </select>
+                ${ICONS.chevronDown}
+              </div>
+            </div>
+            <div class="field">
+              <label for="enr_sem">Semester</label>
+              <div class="select-wrap">
+                <select id="enr_sem" name="semester">
+                  <option value="1st" selected>1st semester</option>
+                  <option value="2nd">2nd semester</option>
+                  <option value="Summer">Summer</option>
+                </select>
+                ${ICONS.chevronDown}
+              </div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="button outline" onclick="closeModal('modal-enroll-student')">Cancel</button>
+            <button type="submit" class="button primary no-spin">Submit enrollment</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  initStudentCombobox('enr-student-combobox', 'enr_student_input', 'enr_student_id', 'enr_student_menu');
+}
+
+function filterEnrollments() {
+  const q = (document.getElementById('enrollment-search-input')?.value || '').toLowerCase().trim();
+  const term = (document.getElementById('enrollment-term-select')?.value || '').trim();
+  const rows = document.querySelectorAll('.enroll-row');
+  let matchCount = 0;
+  rows.forEach(row => {
+    const show = (!q || (row.getAttribute('data-text') || '').includes(q)) && (!term || (row.getAttribute('data-term') || '').includes(term));
+    row.style.display = show ? '' : 'none';
+    if (show) matchCount++;
+  });
+  const emptyRow = document.getElementById('enroll-empty-row');
+  if (emptyRow) emptyRow.style.display = (matchCount === 0 && rows.length > 0) ? '' : 'none';
+  const cap = document.getElementById('enroll-count-caption');
+  if (cap) cap.textContent = `${matchCount} of ${rows.length} records`;
+}
+
+function submitEnrollStudent(e) {
+  e.preventDefault();
+  const sid = parseInt(document.getElementById('enr_student_id').value, 10);
+  const cid = parseInt(document.getElementById('enr_course').value, 10);
+  const sy = document.getElementById('enr_sy').value;
+  const sem = document.getElementById('enr_sem').value;
+  const student = store.students.find(s => s.id === sid);
+  const course = store.courses.find(c => c.id === cid);
+  if (!student || !course) {
+    flashAlert = { type: 'error', html: 'Please select a valid student and course.' };
+    renderApp('enrollment');
+    return;
+  }
+  store.enrollments.unshift({
+    enrollment_id: Date.now(),
+    student_id: student.id,
+    student_code: student.enrollCode,
+    student_name: student.firstName + ' ' + student.lastName,
+    student_program: student.program,
+    course_id: course.id,
+    course_code: course.code,
+    course_name: course.name,
+    units: course.units,
+    school_year: sy,
+    semester: sem,
+    grade: null
+  });
+  saveStore();
+  closeModal('modal-enroll-student');
+  flashAlert = { type: 'success', html: '<strong>Student enrolled successfully!</strong> Registration completed.' };
+  renderApp('enrollment');
+}
+
+function confirmDropEnrollment(enrollId, studentName, courseCode) {
+  showConfirmModal({
+    title: 'Drop Course Enrollment',
+    message: `Are you sure you want to drop ${studentName} from ${courseCode}? This will permanently remove the student enrollment record.`,
+    confirmText: 'Yes, drop course',
+    tone: 'danger',
+    onConfirm: function() {
+      store.enrollments = store.enrollments.filter(e => e.enrollment_id !== enrollId);
+      saveStore();
+      flashAlert = { type: 'success', html: '<strong>Course dropped.</strong> Student enrollment record removed.' };
+      renderApp('enrollment');
+    }
+  });
+}
+
+/* ── 6. Registrar Grades Encoding Page (views/registrar/grades_encoding.php) ── */
+function renderGradesEncodingPage(container) {
+  const enrollments = store.enrollments;
+  const encodedCount = enrollments.filter(e => !!e.grade).length;
+  const pendingCount = enrollments.length - encodedCount;
+  const gradeList = ['1.00', '1.25', '1.50', '1.75', '2.00', '2.25', '2.50', '2.75', '3.00', '5.00', 'INC', 'DRP'];
+
+  const rows = enrollments.map(en => {
+    let badgeHtml = statusBadge('Not encoded', 'warning');
+    if (en.grade) {
+      const gUpper = String(en.grade).toUpperCase().trim();
+      if (gUpper === 'INC') badgeHtml = statusBadge('INC · Incomplete', 'warning');
+      else if (gUpper === 'DRP') badgeHtml = statusBadge('DRP · Dropped', 'danger');
+      else if (!isNaN(parseFloat(en.grade)) && parseFloat(en.grade) <= 3.0) badgeHtml = statusBadge(`${en.grade} · Passed`, 'success');
+      else badgeHtml = statusBadge(`${en.grade} · Failed`, 'danger');
+    }
+
+    const opts = gradeList.map(g => `<option value="${g}" ${en.grade === g ? 'selected' : ''}>${g}</option>`).join('');
+
+    return `
+      <tr class="grade-row"
+          data-text="${esc((en.student_code + ' ' + en.student_name + ' ' + en.course_code + ' ' + en.course_name).toLowerCase())}"
+          data-course="${esc(en.course_code.toLowerCase())}">
+        <td>
+          <strong>${esc(en.student_name)}</strong>
+          <small class="table-subtext">${esc(en.student_code + ' · ' + en.student_program)}</small>
+        </td>
+        <td class="code-cell">${esc(en.course_code)}</td>
+        <td>${esc(en.course_name)}</td>
+        <td>${esc(en.school_year + ' · ' + en.semester)}</td>
+        <td>${esc(en.units)}</td>
+        <td>${badgeHtml}</td>
+        <td>
+          <form onsubmit="submitEncodeGrade(event, ${en.enrollment_id})" style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;">
+            <div class="select-wrap" style="width:84px;flex-shrink:0;">
+              <select name="grade" class="grade-select-input" style="padding:5px 20px 5px 8px;font-size:12px;border-radius:6px;min-height:32px;height:32px;">
+                <option value="">—</option>
+                ${opts}
+              </select>
+              ${ICONS.chevronDown}
+            </div>
+            <button type="submit" class="button primary no-spin" style="padding:5px 9px;font-size:11px;min-height:32px;height:32px;flex-shrink:0;">Save</button>
+          </form>
+        </td>
+      </tr>`;
+  }).join('');
+
+  const courseOpts = store.courses.map(c => `<option value="${esc(c.code.toLowerCase())}">${esc(c.code)}</option>`).join('');
+
+  container.innerHTML = `
+    ${pageHeader('Grades encoding', 'Encode and finalize student marks and academic grades.')}
+    ${renderFlashAlert()}
+    <div class="grades-summary-strip">
+      <div class="grades-summary-item">
+        <span>Total Course Records</span>
+        <strong>${enrollments.length}</strong>
+        <small>Enrolled Student Subjects</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Grades Encoded</span>
+        <strong>${encodedCount}</strong>
+        <small>Finalized Term Marks</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Pending Encoding</span>
+        <strong style="color:${pendingCount > 0 ? '#a6631b' : '#26593b'};">${pendingCount}</strong>
+        <small>Awaiting Faculty Submission</small>
+      </div>
+    </div>
+
+    <section class="card table-card">
+      <div class="toolbar">
+        <div class="search-input">
+          ${ICONS.search}
+          <input type="text" id="grade-search-input" placeholder="Search by student, ID, or course" oninput="filterGradesEncoding()">
+        </div>
+        <div class="select-wrap compact-select">
+          <select id="grade-course-select" onchange="filterGradesEncoding()">
+            <option value="">All courses</option>
+            ${courseOpts}
+          </select>
+          ${ICONS.chevronDown}
+        </div>
+        <span class="toolbar-caption" id="grade-count-caption" style="margin-left:auto;">${enrollments.length} students</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Course Code</th>
+              <th>Course Title</th>
+              <th>Term</th>
+              <th>Units</th>
+              <th>Current Grade</th>
+              <th>Encode Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+            <tr id="grade-empty-row" class="search-empty-row" style="display:none;">
+              <td colspan="7">
+                ${ICONS.search}
+                <strong>No student grade records found</strong>
+                <span>Try adjusting your search query or selecting a different course filter.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  `;
+}
+
+function filterGradesEncoding() {
+  const q = (document.getElementById('grade-search-input')?.value || '').toLowerCase().trim();
+  const course = (document.getElementById('grade-course-select')?.value || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('.grade-row');
+  let matchCount = 0;
+  rows.forEach(row => {
+    const show = (!q || (row.getAttribute('data-text') || '').includes(q)) && (!course || row.getAttribute('data-course') === course);
+    row.style.display = show ? '' : 'none';
+    if (show) matchCount++;
+  });
+  const emptyRow = document.getElementById('grade-empty-row');
+  if (emptyRow) emptyRow.style.display = (matchCount === 0 && rows.length > 0) ? '' : 'none';
+  const cap = document.getElementById('grade-count-caption');
+  if (cap) cap.textContent = `${matchCount} of ${rows.length} students`;
+}
+
+function submitEncodeGrade(e, enrollId) {
+  e.preventDefault();
+  const gradeVal = e.target.querySelector('select[name="grade"]').value;
+  const item = store.enrollments.find(en => en.enrollment_id === enrollId);
+  if (item) {
+    item.grade = gradeVal || null;
+    saveStore();
+  }
+  flashAlert = { type: 'success', html: '<strong>Grade updated successfully!</strong> The grade mark has been saved.' };
+  renderApp('grades-encoding');
+}
+
+/* ── 7. Cashier Payments Page (views/cashier/payments.php) ── */
+function renderPaymentsPage(container) {
+  const payments = store.payments;
+  const students = store.students;
+
+  const rows = payments.map(p => {
+    const dateStr = new Date(p.payment_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+    return `
+      <tr class="payment-row"
+          data-text="${esc((p.or_number + ' ' + p.student_code + ' ' + p.student_name + ' ' + p.payment_type).toLowerCase())}"
+          data-type="${esc(p.payment_type.toLowerCase())}">
+        <td class="code-cell"><strong>${esc(p.or_number)}</strong></td>
+        <td>${esc(dateStr)}</td>
+        <td>
+          <strong>${esc(p.student_name)}</strong>
+          <small class="table-subtext">${esc(p.student_code)}</small>
+        </td>
+        <td>${esc(p.student_program)}</td>
+        <td>${esc(p.payment_type)}</td>
+        <td><strong>₱ ${Number(p.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong></td>
+        <td>${statusBadge('Paid · Cleared', 'success')}</td>
+      </tr>`;
+  }).join('');
+
+  const studentItems = students.map(st => `
+    <li class="combobox-item"
+        data-id="${st.id}"
+        data-code="${esc(st.enrollCode)}"
+        data-name="${esc(st.firstName + ' ' + st.lastName)}"
+        data-label="${esc(st.enrollCode + ' — ' + st.firstName + ' ' + st.lastName)}"
+        data-search="${esc((st.enrollCode + ' ' + st.code + ' ' + st.firstName + ' ' + st.lastName + ' ' + st.program).toLowerCase())}">
+      <div>
+        <strong>${esc(st.firstName + ' ' + st.lastName)}</strong>
+        <div style="font-size:11px;color:var(--muted);">${esc(st.program)}</div>
+      </div>
+      <small>${esc(st.enrollCode)}</small>
+    </li>
+  `).join('');
+
+  container.innerHTML = `
+    ${pageHeader('Payments', 'Record and manage student fee transactions and official receipts.', `<button class='button primary' onclick="openModal('modal-record-payment')">Record payment ${ICONS.plus}</button>`)}
+    ${renderFlashAlert()}
+    <section class="card table-card">
+      <div class="toolbar">
+        <div class="search-input">
+          ${ICONS.search}
+          <input type="text" id="payment-search-input" placeholder="Search by OR#, student name, or ID" oninput="filterPayments()">
+        </div>
+        <div class="select-wrap compact-select">
+          <select id="payment-type-select" onchange="filterPayments()">
+            <option value="">All payment types</option>
+            <option value="tuition">Tuition</option>
+            <option value="document fee">Document Fee</option>
+            <option value="miscellaneous">Miscellaneous</option>
+            <option value="graduation fee">Graduation Fee</option>
+          </select>
+          ${ICONS.chevronDown}
+        </div>
+        <span class="toolbar-caption" id="payment-count-caption" style="margin-left:auto;">${payments.length} transactions</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>OR Number</th>
+              <th>Date</th>
+              <th>Student</th>
+              <th>Program</th>
+              <th>Payment Type</th>
+              <th>Amount Paid</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+            <tr id="payment-empty-row" class="search-empty-row" style="display:none;">
+              <td colspan="7">
+                ${ICONS.search}
+                <strong>No payment transactions found</strong>
+                <span>Try searching for another official receipt number, student name, or ID.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="modal-record-payment" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal('modal-record-payment')">
+      <div class="modal" onclick="event.stopPropagation()">
+        <form onsubmit="submitRecordPayment(event)">
+          <div class="modal-heading">
+            <div><h2>Record payment</h2><p>Process a student cash or counter payment and issue an OR.</p></div>
+            <button type="button" onclick="closeModal('modal-record-payment')">${ICONS.x}</button>
+          </div>
+          <div class="modal-grid">
+            <div class="field">
+              <label for="pay_student_input">Student</label>
+              <div class="combobox-wrap" id="pay-student-combobox">
+                <input type="hidden" name="student_id" id="pay_student_id">
+                <input type="text" id="pay_student_input" name="student_search" class="combobox-input" placeholder="Search by name or student ID..." autocomplete="off" required>
+                <ul class="combobox-menu" id="pay_student_menu">${studentItems}</ul>
+              </div>
+            </div>
+            <div class="field">
+              <label for="pay_type">Payment type</label>
+              <div class="select-wrap">
+                <select id="pay_type" name="payment_type" required>
+                  <option value="Tuition">Tuition Fee</option>
+                  <option value="Document Fee">Document Fee</option>
+                  <option value="Miscellaneous">Miscellaneous Fee</option>
+                  <option value="Graduation Fee">Graduation Fee</option>
+                </select>
+                ${ICONS.chevronDown}
+              </div>
+            </div>
+            <div class="field">
+              <label for="pay_amount">Amount (₱)</label>
+              <input type="number" step="0.01" min="1" id="pay_amount" name="amount" placeholder="e.g. 1250.00" required>
+            </div>
+            <div class="field">
+              <label for="pay_orn">Official Receipt (OR) Number</label>
+              <input type="text" id="pay_orn" name="or_number" placeholder="Leave blank to auto-generate (OR-2026-XXXX)">
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="button outline" onclick="closeModal('modal-record-payment')">Cancel</button>
+            <button type="submit" class="button primary no-spin">Submit payment</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  initStudentCombobox('pay-student-combobox', 'pay_student_input', 'pay_student_id', 'pay_student_menu');
+}
+
+function filterPayments() {
+  const q = (document.getElementById('payment-search-input')?.value || '').toLowerCase().trim();
+  const type = (document.getElementById('payment-type-select')?.value || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('.payment-row');
+  let matchCount = 0;
+  rows.forEach(row => {
+    const show = (!q || (row.getAttribute('data-text') || '').includes(q)) && (!type || row.getAttribute('data-type') === type);
+    row.style.display = show ? '' : 'none';
+    if (show) matchCount++;
+  });
+  const emptyRow = document.getElementById('payment-empty-row');
+  if (emptyRow) emptyRow.style.display = (matchCount === 0 && rows.length > 0) ? '' : 'none';
+  const cap = document.getElementById('payment-count-caption');
+  if (cap) cap.textContent = `${matchCount} of ${rows.length} transactions`;
+}
+
+function submitRecordPayment(e) {
+  e.preventDefault();
+  const sid = parseInt(document.getElementById('pay_student_id').value, 10);
+  const ptype = document.getElementById('pay_type').value;
+  const amount = parseFloat(document.getElementById('pay_amount').value);
+  let orn = document.getElementById('pay_orn').value.trim();
+  const student = store.students.find(s => s.id === sid);
+  if (!student || isNaN(amount) || amount <= 0) {
+    flashAlert = { type: 'error', html: 'Please select a valid student and enter a valid payment amount.' };
+    renderApp('payments');
+    return;
+  }
+  if (!orn) {
+    orn = 'OR-2026-' + String(Math.floor(1000 + Math.random() * 9000));
+  }
+  store.payments.unshift({
+    payment_id: Date.now(),
+    student_id: student.id,
+    student_code: student.enrollCode,
+    student_name: student.firstName + ' ' + student.lastName,
+    student_program: student.program,
+    amount: amount,
+    payment_date: new Date().toISOString().split('T')[0],
+    or_number: orn,
+    payment_type: ptype
+  });
+  saveStore();
+  closeModal('modal-record-payment');
+  flashAlert = { type: 'success', html: `<strong>Payment recorded successfully!</strong> Official Receipt ${esc(orn)} issued.` };
+  renderApp('payments');
+}
+
+/* ── 8. Cashier Receipts Page (views/cashier/receipts.php) ── */
+function renderReceiptsPage(container) {
+  const payments = store.payments;
+  const rows = payments.map(p => {
+    const dateStr = new Date(p.payment_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: '2-digit', year: 'numeric' });
+    const amtStr = Number(p.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return `
+      <tr class="receipt-row"
+          data-text="${esc((p.or_number + ' ' + p.student_code + ' ' + p.student_name + ' ' + p.payment_type).toLowerCase())}">
+        <td class="code-cell"><strong>${esc(p.or_number)}</strong></td>
+        <td>${esc(dateStr)}</td>
+        <td>
+          <strong>${esc(p.student_name)}</strong>
+          <small class="table-subtext">${esc(p.student_code + ' · ' + p.student_program)}</small>
+        </td>
+        <td>${esc(p.payment_type)}</td>
+        <td><strong style="color:#26593b;">₱ ${esc(amtStr)}</strong></td>
+        <td>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <button type="button" class="button outline" style="padding:5px 10px;font-size:12px;"
+                    onclick="viewReceipt('${esc(p.or_number)}', '${esc(dateStr)}', '${esc(p.student_name)}', '${esc(p.student_code)}', '${esc(p.student_program)}', '${esc(p.payment_type)}', '${esc(amtStr)}')">
+              ${ICONS.receipt} View
+            </button>
+            <button type="button" class="button outline" style="padding:5px 10px;font-size:12px;"
+                    onclick="printReceiptDirect('${esc(p.or_number)}', '${esc(dateStr)}', '${esc(p.student_name)}', '${esc(p.student_code)}', '${esc(p.student_program)}', '${esc(p.payment_type)}', '${esc(amtStr)}')">
+              ${ICONS.printer} Print
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    ${pageHeader('Receipts', 'Official Receipt (OR) directory, audit trail, and print voucher generator.')}
+    <section class="card table-card">
+      <div class="toolbar">
+        <div class="search-input">
+          ${ICONS.search}
+          <input type="text" id="receipt-search-input" placeholder="Search by OR#, student name, or date" oninput="filterReceipts()">
+        </div>
+        <span class="toolbar-caption" id="receipt-count-caption">${payments.length} receipts issued</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>OR Number</th>
+              <th>Date Issued</th>
+              <th>Student Payer</th>
+              <th>Payment Description</th>
+              <th>Amount Paid</th>
+              <th>Receipt Voucher</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+            <tr id="receipt-empty-row" class="search-empty-row" style="display:none;">
+              <td colspan="6">
+                ${ICONS.search}
+                <strong>No receipts found</strong>
+                <span>Try searching for another official receipt number, student name, or ID.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="modal-receipt-view" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal('modal-receipt-view')">
+      <div class="modal" style="max-width:560px;" onclick="event.stopPropagation()">
+        <div class="modal-heading">
+          <div>
+            <h2>Official Receipt</h2>
+            <p>CuyoTech University · Cashier's Office</p>
+          </div>
+          <button type="button" onclick="closeModal('modal-receipt-view')">${ICONS.x}</button>
+        </div>
+        <div id="printable-receipt" style="background:#ffffff;border:1px solid #cad7cf;border-radius:8px;padding:24px;margin-bottom:18px;">
+          <div style="text-align:center;border-bottom:2px dashed #cad7cf;padding-bottom:14px;margin-bottom:16px;">
+            <img src="CuyoTech_University_Logo_sm.png" alt="CuyoTech University Logo" style="height:46px;width:auto;max-width:120px;object-fit:contain;margin-bottom:6px;" width="64" height="46">
+            <h3 style="margin:0;font-size:16px;color:#18231c;text-transform:uppercase;letter-spacing:0.5px;">CuyoTech University</h3>
+            <p style="margin:2px 0 0;font-size:12px;color:#4e5f56;">Student Services Information System · Cashier's Office</p>
+            <div style="display:flex;justify-content:space-between;margin-top:14px;font-size:13px;">
+              <span><strong>OR Number:</strong> <span id="rec-orn" style="font-family:monospace;color:#26593b;"></span></span>
+              <span><strong>Date:</strong> <span id="rec-date"></span></span>
+            </div>
+          </div>
+
+          <div style="font-size:13px;line-height:1.8;">
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid #edf3ef;padding:4px 0;">
+              <span style="color:#4e5f56;">Received From:</span>
+              <strong><span id="rec-name"></span></strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid #edf3ef;padding:4px 0;">
+              <span style="color:#4e5f56;">Student ID:</span>
+              <span id="rec-id"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid #edf3ef;padding:4px 0;">
+              <span style="color:#4e5f56;">Degree Program:</span>
+              <span id="rec-prog"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid #edf3ef;padding:4px 0;">
+              <span style="color:#4e5f56;">Payment Category:</span>
+              <span id="rec-type"></span>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-top:2px solid #354f46;margin-top:12px;padding-top:8px;font-size:16px;">
+              <strong>Total Amount Paid:</strong>
+              <strong style="color:#26593b;">₱ <span id="rec-amt"></span></strong>
+            </div>
+          </div>
+
+          <div style="margin-top:24px;padding-top:14px;border-top:1px dashed #cad7cf;display:flex;justify-content:space-between;align-items:flex-end;">
+            <div>
+              <span style="display:inline-block;padding:2px 8px;font-size:11px;border-radius:4px;background:#ebf5ee;color:#26593b;border:1px solid #badbca;font-weight:600;">PAID &amp; VERIFIED</span>
+            </div>
+            <div style="text-align:center;font-size:11px;color:#4e5f56;">
+              <div style="border-bottom:1px solid #18231c;width:140px;margin-bottom:2px;"></div>
+              <span>Authorized Cashier Signature</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="button outline" onclick="closeModal('modal-receipt-view')">Close</button>
+          <button type="button" class="button primary" onclick="window.print()">${ICONS.receipt} Print receipt</button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function filterReceipts() {
+  const q = (document.getElementById('receipt-search-input')?.value || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('.receipt-row');
+  let matchCount = 0;
+  rows.forEach(row => {
+    const show = !q || (row.getAttribute('data-text') || '').includes(q);
+    row.style.display = show ? '' : 'none';
+    if (show) matchCount++;
+  });
+  const emptyRow = document.getElementById('receipt-empty-row');
+  if (emptyRow) emptyRow.style.display = (matchCount === 0 && rows.length > 0) ? '' : 'none';
+  const cap = document.getElementById('receipt-count-caption');
+  if (cap) cap.textContent = `${matchCount} of ${rows.length} receipts issued`;
+}
+
+function viewReceipt(orn, date, name, id, prog, type, amt) {
+  document.getElementById('rec-orn').textContent = orn;
+  document.getElementById('rec-date').textContent = date;
+  document.getElementById('rec-name').textContent = name;
+  document.getElementById('rec-id').textContent = id;
+  document.getElementById('rec-prog').textContent = prog;
+  document.getElementById('rec-type').textContent = type;
+  document.getElementById('rec-amt').textContent = amt;
+  openModal('modal-receipt-view');
+}
+
+function printReceiptDirect(orn, date, name, id, prog, type, amt) {
+  viewReceipt(orn, date, name, id, prog, type, amt);
+  setTimeout(() => window.print(), 200);
+}
+
+/* ── 9. Department Clearance Page (views/department/clearance.php) ── */
+function renderClearancePage(container) {
+  const clearances = store.clearances;
+  const clearedCount = clearances.filter(c => c.status === 'Cleared').length;
+  const holdCount = clearances.filter(c => c.status === 'Hold').length;
+  const pendingCount = clearances.length - clearedCount - holdCount;
+
+  const rows = clearances.map(cl => {
+    const tone = cl.status === 'Cleared' ? 'success' : (cl.status === 'Hold' ? 'danger' : 'warning');
+    const dateStr = cl.date_cleared ? new Date(cl.date_cleared + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '—';
+    let btns = '';
+    if (cl.status !== 'Cleared') {
+      btns += `<button type="button" class="button primary" style="padding:4px 8px;font-size:11px;min-height:28px;height:28px;white-space:nowrap;" onclick="updateClearanceStatus(${cl.clearance_id}, 'Cleared')">Approve (Clear)</button>`;
+    }
+    if (cl.status !== 'Hold') {
+      btns += `<button type="button" class="reject-button" style="padding:4px 8px;font-size:11px;min-height:28px;height:28px;white-space:nowrap;" onclick="updateClearanceStatus(${cl.clearance_id}, 'Hold')">Put on Hold</button>`;
+    }
+    if (cl.status !== 'Pending') {
+      btns += `<button type="button" class="button outline" style="padding:4px 8px;font-size:11px;min-height:28px;height:28px;white-space:nowrap;" onclick="updateClearanceStatus(${cl.clearance_id}, 'Pending')">Set Pending</button>`;
+    }
+
+    return `
+      <tr class="cl-row"
+          data-text="${esc((cl.student_code + ' ' + cl.student_name + ' ' + cl.department_name + ' ' + cl.status).toLowerCase())}"
+          data-dept="${esc(cl.department_name.toLowerCase())}"
+          data-status="${esc(cl.status.toLowerCase())}">
+        <td class="code-cell">${esc(cl.student_code)}</td>
+        <td><strong>${esc(cl.student_name)}</strong></td>
+        <td>${esc(cl.student_program)}</td>
+        <td>${esc(cl.department_name)}</td>
+        <td>${statusBadge(cl.status, tone)}</td>
+        <td>${esc(dateStr)}</td>
+        <td><div class="row-actions" style="gap:4px;flex-wrap:wrap;">${btns}</div></td>
+      </tr>`;
+  }).join('');
+
+  const deptOpts = store.departments.map(d => `<option value="${esc(d.name.toLowerCase())}">${esc(d.name)}</option>`).join('');
+  const modalDeptOpts = store.departments.map(d => `<option value="${d.id}">${esc(d.name)}</option>`).join('');
+  const studentItems = store.students.map(st => `
+    <li class="combobox-item"
+        data-id="${st.id}"
+        data-code="${esc(st.enrollCode)}"
+        data-name="${esc(st.firstName + ' ' + st.lastName)}"
+        data-label="${esc(st.enrollCode + ' — ' + st.firstName + ' ' + st.lastName)}"
+        data-search="${esc((st.enrollCode + ' ' + st.code + ' ' + st.firstName + ' ' + st.lastName + ' ' + st.program).toLowerCase())}">
+      <div>
+        <strong>${esc(st.firstName + ' ' + st.lastName)}</strong>
+        <div style="font-size:11px;color:var(--muted);">${esc(st.program)}</div>
+      </div>
+      <small>${esc(st.enrollCode)}</small>
+    </li>
+  `).join('');
+
+  container.innerHTML = `
+    ${pageHeader('Clearance processing', 'Evaluate, approve, or hold student departmental clearances.', `<button class='button primary' onclick="openModal('modal-add-clearance')">New clearance record ${ICONS.plus}</button>`)}
+    ${renderFlashAlert()}
+    <div class="grades-summary-strip">
+      <div class="grades-summary-item">
+        <span>Cleared Students</span>
+        <strong style="color:#26593b;">${clearedCount}</strong>
+        <small>Approved Departmental Clearances</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Pending Evaluation</span>
+        <strong style="color:${pendingCount > 0 ? '#a6631b' : '#26593b'};">${pendingCount}</strong>
+        <small>Awaiting Office Review</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>On Hold</span>
+        <strong style="color:${holdCount > 0 ? '#b42318' : '#26593b'};">${holdCount}</strong>
+        <small>Requires Student Settlement</small>
+      </div>
+    </div>
+
+    <section class="card table-card">
+      <div class="toolbar">
+        <div class="search-input">
+          ${ICONS.search}
+          <input type="text" id="clearance-search-input" placeholder="Search by student, ID, or department" oninput="filterClearances()">
+        </div>
+        <div class="select-wrap compact-select">
+          <select id="clearance-dept-select" onchange="filterClearances()">
+            <option value="">All departments</option>
+            ${deptOpts}
+          </select>
+          ${ICONS.chevronDown}
+        </div>
+        <div class="select-wrap compact-select">
+          <select id="clearance-status-select" onchange="filterClearances()">
+            <option value="">All statuses</option>
+            <option value="cleared">Cleared</option>
+            <option value="pending">Pending</option>
+            <option value="hold">Hold</option>
+          </select>
+          ${ICONS.chevronDown}
+        </div>
+        <span class="toolbar-caption" id="clearance-count-caption" style="margin-left:auto;">${clearances.length} records</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Student Name</th>
+              <th>Program</th>
+              <th>Department / Office</th>
+              <th>Status</th>
+              <th>Date Cleared</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+            <tr id="clearance-empty-row" class="search-empty-row" style="display:none;">
+              <td colspan="7">
+                ${ICONS.search}
+                <strong>No clearance records found</strong>
+                <span>Try searching for another student name, department office, or status filter.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="modal-add-clearance" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal('modal-add-clearance')">
+      <div class="modal" onclick="event.stopPropagation()">
+        <form onsubmit="submitAddClearance(event)">
+          <div class="modal-heading">
+            <div><h2>New clearance evaluation</h2><p>Initialize or update clearance record for a student in an office.</p></div>
+            <button type="button" onclick="closeModal('modal-add-clearance')">${ICONS.x}</button>
+          </div>
+          <div class="modal-grid">
+            <div class="field">
+              <label for="cl_student_input">Student</label>
+              <div class="combobox-wrap" id="cl-student-combobox">
+                <input type="hidden" name="student_id" id="cl_student_id">
+                <input type="text" id="cl_student_input" name="student_search" class="combobox-input" placeholder="Search by name or student ID..." autocomplete="off" required>
+                <ul class="combobox-menu" id="cl_student_menu">${studentItems}</ul>
+              </div>
+            </div>
+            <div class="field">
+              <label for="cl_department">Department / Office</label>
+              <div class="select-wrap">
+                <select id="cl_department" name="department_id" required>
+                  <option value="">Select office</option>
+                  ${modalDeptOpts}
+                </select>
+                ${ICONS.chevronDown}
+              </div>
+            </div>
+            <div class="field">
+              <label for="cl_status">Initial status</label>
+              <div class="select-wrap">
+                <select id="cl_status" name="status">
+                  <option value="Pending" selected>Pending</option>
+                  <option value="Cleared">Cleared</option>
+                  <option value="Hold">Hold</option>
+                </select>
+                ${ICONS.chevronDown}
+              </div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="button outline" onclick="closeModal('modal-add-clearance')">Cancel</button>
+            <button type="submit" class="button primary no-spin">Save clearance</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+
+  initStudentCombobox('cl-student-combobox', 'cl_student_input', 'cl_student_id', 'cl_student_menu');
+}
+
+function filterClearances() {
+  const q = (document.getElementById('clearance-search-input')?.value || '').toLowerCase().trim();
+  const dept = (document.getElementById('clearance-dept-select')?.value || '').toLowerCase().trim();
+  const status = (document.getElementById('clearance-status-select')?.value || '').toLowerCase().trim();
+  const rows = document.querySelectorAll('.cl-row');
+  let matchCount = 0;
+  rows.forEach(row => {
+    const show = (!q || (row.getAttribute('data-text') || '').includes(q)) &&
+                 (!dept || (row.getAttribute('data-dept') || '').includes(dept)) &&
+                 (!status || row.getAttribute('data-status') === status);
+    row.style.display = show ? '' : 'none';
+    if (show) matchCount++;
+  });
+  const emptyRow = document.getElementById('clearance-empty-row');
+  if (emptyRow) emptyRow.style.display = (matchCount === 0 && rows.length > 0) ? '' : 'none';
+  const cap = document.getElementById('clearance-count-caption');
+  if (cap) cap.textContent = `${matchCount} of ${rows.length} records`;
+}
+
+function updateClearanceStatus(id, status) {
+  const cl = store.clearances.find(c => c.clearance_id === id);
+  if (cl) {
+    cl.status = status;
+    cl.date_cleared = status === 'Cleared' ? new Date().toISOString().split('T')[0] : null;
+    saveStore();
+  }
+  flashAlert = { type: 'success', html: '<strong>Clearance status updated!</strong> Changes have been recorded.' };
+  renderApp('clearance');
+}
+
+function submitAddClearance(e) {
+  e.preventDefault();
+  const sid = parseInt(document.getElementById('cl_student_id').value, 10);
+  const did = parseInt(document.getElementById('cl_department').value, 10);
+  const st = document.getElementById('cl_status').value;
+  const student = store.students.find(s => s.id === sid);
+  const dept = store.departments.find(d => d.id === did);
+  if (!student || !dept) return;
+  store.clearances.unshift({
+    clearance_id: Date.now(),
+    student_id: student.id,
+    student_code: student.enrollCode,
+    student_name: student.firstName + ' ' + student.lastName,
+    student_program: student.program,
+    department_id: dept.id,
+    department_name: dept.name,
+    status: st,
+    date_cleared: st === 'Cleared' ? new Date().toISOString().split('T')[0] : null
+  });
+  saveStore();
+  closeModal('modal-add-clearance');
+  flashAlert = { type: 'success', html: '<strong>Student clearance record added!</strong> Initialized for the selected office.' };
+  renderApp('clearance');
+}
+
+/* ── 10. Admin User Accounts Page (views/admin/users.php) ── */
+function renderAdminUsersPage(container) {
+  const users = [
+    ...store.students.map(s => ({ id: s.code, name: s.firstName + ' ' + s.lastName, role: 'Student', program: s.program, status: s.status, email: s.email })),
+    ...store.admins.map(a => ({ id: a.code, name: a.name, role: a.role, program: a.department, status: 'Active', email: a.username + '@cuyotech.edu' }))
+  ];
+  const studentCount = users.filter(u => u.role.toLowerCase() === 'student').length;
+  const staffCount = users.length - studentCount;
+
+  const rows = users.map(r => `
+    <tr class="user-row" data-role="${esc(r.role.toLowerCase())}" data-text="${esc((r.id + ' ' + r.name + ' ' + r.email + ' ' + r.program).toLowerCase())}">
+      <td class="code-cell">${esc(r.id)}</td>
+      <td>
+        <strong>${esc(r.name)}</strong>
+        <small class="table-subtext">${esc(r.email)}</small>
+      </td>
+      <td>${esc(r.role)}</td>
+      <td>${esc(r.program)}</td>
+      <td>${statusBadge(r.status, r.status === 'Active' ? 'success' : 'danger')}</td>
+    </tr>
+  `).join('');
+
+  container.innerHTML = `
+    ${pageHeader('User accounts', 'Manage student and staff user access and account roles.', `<button class='button primary' onclick="openModal('modal-add-user')">Add user ${ICONS.plus}</button>`)}
+    ${renderFlashAlert()}
+    <div class="grades-summary-strip">
+      <div class="grades-summary-item">
+        <span>Total Accounts</span>
+        <strong>${users.length}</strong>
+        <small>Registered Portal Users</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Student Accounts</span>
+        <strong style="color:#26593b;">${studentCount}</strong>
+        <small>Enrolled University Students</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Staff &amp; Administrators</span>
+        <strong>${staffCount}</strong>
+        <small>Registrar, Cashier &amp; Offices</small>
+      </div>
+    </div>
+
+    <section class="card table-card">
+      <div class="toolbar">
+        <div class="search-input">${ICONS.search}<input type="text" id="user-search-input" placeholder="Search by ID, name, or email" oninput="filterUsers()"></div>
+        <div class="select-wrap compact-select">
+          <select id="user-role-select" onchange="filterUsers()">
+            <option value="">All roles</option>
+            <option value="student">Student</option>
+            <option value="administrator">Administrator</option>
+            <option value="registrar">Registrar</option>
+            <option value="cashier">Cashier</option>
+            <option value="departmentstaff">Department Staff</option>
+          </select>
+          ${ICONS.chevronDown}
+        </div>
+        <span class="toolbar-caption" id="user-count-caption" style="margin-left:auto;">${users.length} accounts</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Program / Office</th><th>Status</th></tr></thead>
+          <tbody id="users-table-body">
+            ${rows}
+            <tr id="user-empty-row" class="search-empty-row" style="display:none;">
+              <td colspan="5">
+                ${ICONS.search}
+                <strong>No user accounts found</strong>
+                <span>Try searching with a different name, email, ID, or user role filter.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="modal-add-user" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal('modal-add-user')">
+      <div class="modal" onclick="event.stopPropagation()">
+        <form onsubmit="submitAddUser(event)">
+          <div class="modal-heading">
+            <div><h2>Add user</h2><p>Create a new student or administrative staff user account.</p></div>
+            <button type="button" onclick="closeModal('modal-add-user')">${ICONS.x}</button>
+          </div>
+          <div class="modal-grid">
+            <div class="field"><label for="u_name">Full name</label><input type="text" id="u_name" name="name" placeholder="e.g. John Doe" required></div>
+            <div class="field"><label for="u_email">Email address</label><input type="email" id="u_email" name="email" placeholder="name@cuyotech.edu" required></div>
+            <div class="field">
+              <label for="u_role">Role</label>
+              <div class="select-wrap">
+                <select id="u_role" name="role">
+                  <option value="Student">Student</option>
+                  <option value="Administrator">Administrator</option>
+                  <option value="Registrar">Registrar</option>
+                  <option value="Cashier">Cashier</option>
+                  <option value="DepartmentStaff">Department Staff</option>
+                </select>
+                ${ICONS.chevronDown}
+              </div>
+            </div>
+            <div class="field"><label for="u_prog">Program / Office</label><input type="text" id="u_prog" name="program" placeholder="e.g. BS Information Technology"></div>
+            <div class="field"><label for="u_pw">Temporary password</label><input type="password" id="u_pw" name="password" placeholder="Create temporary password"></div>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="button outline" onclick="closeModal('modal-add-user')">Cancel</button>
+            <button type="submit" class="button primary no-spin">Create account</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function filterUsers() {
+  const q = (document.getElementById('user-search-input')?.value || '').toLowerCase().trim();
+  const role = (document.getElementById('user-role-select')?.value || '').toLowerCase();
+  const rows = document.querySelectorAll('.user-row');
+  let matchCount = 0;
+  rows.forEach(row => {
+    const show = (!q || (row.getAttribute('data-text') || '').includes(q)) && (!role || row.getAttribute('data-role') === role);
+    row.style.display = show ? '' : 'none';
+    if (show) matchCount++;
+  });
+  const emptyRow = document.getElementById('user-empty-row');
+  if (emptyRow) emptyRow.style.display = (matchCount === 0 && rows.length > 0) ? '' : 'none';
+  const cap = document.getElementById('user-count-caption');
+  if (cap) cap.textContent = `${matchCount} of ${rows.length} accounts`;
+}
+
+function submitAddUser(e) {
+  e.preventDefault();
+  const name = document.getElementById('u_name').value.trim();
+  const email = document.getElementById('u_email').value.trim();
+  const role = document.getElementById('u_role').value;
+  const prog = document.getElementById('u_prog').value.trim() || (role === 'Student' ? 'BS Information Technology' : 'Administrative Office');
+  const pw = document.getElementById('u_pw').value || 'password123';
+
+  if (role === 'Student') {
+    const newId = store.students.length + 1;
+    const parts = name.split(' ');
+    const fn = parts.shift() || name;
+    const ln = parts.join(' ') || 'Student';
+    const code = '2025-' + String(newId).padStart(5, '0');
+    store.students.push({
+      id: newId,
+      code: code,
+      enrollCode: code,
+      firstName: fn,
+      lastName: ln,
+      email: email,
+      password: pw,
+      program: prog,
+      yearLevel: 1,
+      status: 'Active',
+      address: 'Puerto Princesa City, Palawan 5300',
+      contact: '+63 917 555 0182'
+    });
+  } else {
+    const newId = store.admins.length + 1;
+    const username = email.split('@')[0];
+    store.admins.push({
+      id: newId,
+      code: 'admin-' + String(newId).padStart(4, '0'),
+      username: username,
+      name: name,
+      role: role,
+      department: prog,
+      password: pw
+    });
+  }
+  saveStore();
+  closeModal('modal-add-user');
+  flashAlert = { type: 'success', html: '<strong>User created successfully!</strong> The new account has been activated.' };
+  renderApp('admin-users');
+}
+
+/* ── 11. Admin Document Requests Page (views/admin/requests.php) ── */
+function renderAdminRequestsPage(container) {
+  const requests = store.requests;
+  const activeCount = requests.filter(r => ['Pending', 'Processing'].includes(r.status)).length;
+  const readyCount = requests.filter(r => ['Ready for release', 'Ready'].includes(r.status)).length;
+  const releasedCount = requests.filter(r => r.status === 'Released').length;
+
+  const rows = requests.map(r => {
+    const [lbl, tone, nextAction] = getReqStatusMeta(r.status);
+    let actionHtml = `<span style="color:#64756A;font-size:12px;">${esc(r.status)}</span>`;
+    if (nextAction !== 'Completed' && r.status !== 'Cancelled' && r.status !== 'Rejected') {
+      actionHtml = `
+        <button type="button" class="button primary" style="padding:4px 8px;font-size:11px;min-height:28px;height:28px;" onclick="advanceRequestStatus(${r.requestId}, '${esc(nextAction)}')">${esc(nextAction)}</button>
+        <button type="button" class="reject-button" style="padding:4px 8px;font-size:11px;min-height:28px;height:28px;" onclick="openRejectModal(${r.requestId})">Reject</button>
+      `;
+    }
+
+    return `
+      <tr class="admin-req-row" data-status="${esc(r.status.toLowerCase())}" data-text="${esc((formatReqId(r.requestId) + ' ' + (r.studentName || 'Juan Dela Cruz') + ' ' + r.documentType).toLowerCase())}">
+        <td>
+          <strong class="code-cell">${esc(formatReqId(r.requestId))}</strong>
+          <small class="table-subtext">Ref. PR-2025-${esc(String(r.requestId).padStart(4, '0'))}</small>
+        </td>
+        <td>${esc(r.studentName || 'Juan Dela Cruz')}</td>
+        <td>${esc(r.documentType)}</td>
+        <td>${esc(r.copies)}</td>
+        <td>${esc(getReqFee(r.documentType, r.copies))}</td>
+        <td>${statusBadge(lbl, tone)}</td>
+        <td><div class="row-actions" style="gap:4px;flex-wrap:wrap;">${actionHtml}</div></td>
+      </tr>`;
+  }).join('');
+
+  container.innerHTML = `
+    ${pageHeader('Document requests', 'Review payments and move requests through fulfillment.')}
+    ${renderFlashAlert()}
+    <div class="grades-summary-strip">
+      <div class="grades-summary-item">
+        <span>Pending &amp; Processing</span>
+        <strong style="color:${activeCount > 0 ? '#a6631b' : '#26593b'};">${activeCount}</strong>
+        <small>In Fulfillment Queue</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Ready for Release</span>
+        <strong style="color:#26593b;">${readyCount}</strong>
+        <small>Awaiting Student Pickup</small>
+      </div>
+      <div class="grades-summary-item">
+        <span>Released Credentials</span>
+        <strong>${releasedCount}</strong>
+        <small>Completed Document Requests</small>
+      </div>
+    </div>
+
+    <section class="card table-card">
+      <div class="toolbar">
+        <div class="search-input">
+          ${ICONS.search}
+          <input type="text" id="req-search-input" placeholder="Search by student, ID, or document" oninput="filterAdminRequests()">
+        </div>
+        <div class="select-wrap compact-select">
+          <select id="req-status-select" onchange="filterAdminRequests()">
+            <option value="">All statuses</option>
+            <option value="pending">Awaiting payment</option>
+            <option value="processing">Processing</option>
+            <option value="ready">Ready for release</option>
+            <option value="released">Released</option>
+            <option value="rejected">Rejected</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          ${ICONS.chevronDown}
+        </div>
+        <span class="toolbar-caption" id="req-count-caption" style="margin-left:auto;">${requests.length} total requests</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Request</th><th>Student</th><th>Document</th><th>Copies</th><th>Fee</th><th>Status</th><th>Next step</th></tr></thead>
+          <tbody>
+            ${rows}
+            <tr id="req-empty-row" class="search-empty-row" style="display:none;">
+              <td colspan="7">
+                ${ICONS.search}
+                <strong>No requests found</strong>
+                <span>Try searching with a different student name, reference ID, or status filter.</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div id="modal-reject" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeModal('modal-reject')">
+      <div class="modal small-modal" onclick="event.stopPropagation()">
+        <form onsubmit="submitRejectRequest(event)">
+          <input type="hidden" id="reject_request_id" value="0">
+          <div class="modal-heading">
+            <div><h2>Reject request</h2><p>Tell the student why this request cannot be processed.</p></div>
+            <button type="button" onclick="closeModal('modal-reject')">${ICONS.x}</button>
+          </div>
+          <div class="field">
+            <label for="reject_reason">Reason</label>
+            <textarea id="reject_reason" name="reason" rows="4" placeholder="Enter a reason for rejection" style="resize:vertical;" required></textarea>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="button outline" onclick="closeModal('modal-reject')">Cancel</button>
+            <button type="submit" class="button danger no-spin">Reject request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  `;
+}
+
+function filterAdminRequests() {
+  const q = (document.getElementById('req-search-input')?.value || '').toLowerCase().trim();
+  const val = (document.getElementById('req-status-select')?.value || '').toLowerCase();
+  const rows = document.querySelectorAll('.admin-req-row');
+  let matchCount = 0;
+  rows.forEach(row => {
+    const show = (!q || (row.getAttribute('data-text') || '').includes(q)) && (!val || (row.getAttribute('data-status') || '').includes(val));
+    row.style.display = show ? '' : 'none';
+    if (show) matchCount++;
+  });
+  const emptyRow = document.getElementById('req-empty-row');
+  if (emptyRow) emptyRow.style.display = (matchCount === 0 && rows.length > 0) ? '' : 'none';
+  const cap = document.getElementById('req-count-caption');
+  if (cap) cap.textContent = `${matchCount} of ${rows.length} requests`;
+}
+
+function advanceRequestStatus(reqId, action) {
+  const r = store.requests.find(item => item.requestId === reqId);
+  if (r) {
+    if (action === 'Confirm payment') r.status = 'Processing';
+    else if (action === 'Mark ready') r.status = 'Ready for release';
+    else if (action === 'Mark released') r.status = 'Released';
+    saveStore();
+  }
+  flashAlert = { type: 'success', html: '<strong>Request updated successfully!</strong> Status modification recorded.' };
+  renderApp('admin-requests');
+}
+
+function openRejectModal(id) {
+  const el = document.getElementById('reject_request_id');
+  if (el) el.value = id;
+  openModal('modal-reject');
+}
+
+function submitRejectRequest(e) {
+  e.preventDefault();
+  const reqId = parseInt(document.getElementById('reject_request_id').value, 10);
+  const r = store.requests.find(item => item.requestId === reqId);
+  if (r) {
+    r.status = 'Rejected';
+    saveStore();
+  }
+  closeModal('modal-reject');
+  flashAlert = { type: 'success', html: '<strong>Request updated successfully!</strong> Status modification recorded.' };
+  renderApp('admin-requests');
+}
+
+/* ── Shared UI & Combobox Helpers (from views/layouts/main.php) ── */
+function initStudentCombobox(wrapId, inputId, hiddenId, menuId) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  const input = document.getElementById(inputId);
+  const hidden = document.getElementById(hiddenId);
+  const menu = document.getElementById(menuId);
+  const items = Array.from(menu.querySelectorAll('.combobox-item'));
+
+  function resolveStudent(query) {
+    if (!query) return null;
+    const q = query.trim().toLowerCase();
+    for (const it of items) {
+      if ((it.getAttribute('data-id') || '') === q ||
+          (it.getAttribute('data-code') || '').toLowerCase() === q ||
+          (it.getAttribute('data-name') || '').toLowerCase() === q ||
+          (it.getAttribute('data-label') || '').toLowerCase() === q) {
+        return it;
+      }
+    }
+    for (const it of items) {
+      if ((it.getAttribute('data-search') || '').toLowerCase().includes(q)) return it;
+    }
+    return null;
+  }
+
+  function selectItem(it) {
+    if (!it) return;
+    hidden.value = it.getAttribute('data-id');
+    input.value = `${it.getAttribute('data-name') || ''} (${it.getAttribute('data-code') || ''})`;
+    items.forEach(el => el.classList.remove('selected'));
+    it.classList.add('selected');
+    menu.classList.remove('open');
+  }
+
+  function filterItems(query) {
+    const q = (query || '').trim().toLowerCase();
+    let visible = 0;
+    items.forEach(it => {
+      const match = !q || (it.getAttribute('data-search') || '').toLowerCase().includes(q);
+      it.style.display = match ? 'flex' : 'none';
+      if (match) visible++;
+    });
+    let empty = menu.querySelector('.combobox-empty');
+    if (visible === 0) {
+      if (!empty) {
+        empty = document.createElement('li');
+        empty.className = 'combobox-empty';
+        empty.textContent = 'No matching student found';
+        menu.appendChild(empty);
+      }
+      empty.style.display = 'block';
+    } else if (empty) {
+      empty.style.display = 'none';
+    }
+  }
+
+  input.addEventListener('focus', () => { menu.classList.add('open'); filterItems(input.value); });
+  input.addEventListener('click', e => { e.stopPropagation(); menu.classList.add('open'); filterItems(input.value); });
+  input.addEventListener('input', () => {
+    menu.classList.add('open');
+    filterItems(input.value);
+    const match = resolveStudent(input.value);
+    hidden.value = match ? match.getAttribute('data-id') : '';
+  });
+
+  items.forEach(it => {
+    it.addEventListener('mousedown', e => { e.preventDefault(); e.stopPropagation(); selectItem(it); });
+    it.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); selectItem(it); });
+  });
+
+  document.addEventListener('click', e => {
+    if (!wrap.contains(e.target)) {
+      menu.classList.remove('open');
+      if (!hidden.value && input.value) {
+        const match = resolveStudent(input.value);
+        if (match) selectItem(match);
+      }
+    }
+  });
+}
+
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.display = 'grid';
+    const firstInput = el.querySelector('input:not([type="hidden"]), select, textarea, button.primary');
+    if (firstInput) setTimeout(() => firstInput.focus(), 50);
+  }
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' || e.keyCode === 27) {
+    document.querySelectorAll('.modal-backdrop').forEach(m => {
+      if (m.style.display === 'grid' || m.style.display === 'flex' || m.style.display === 'block') {
+        m.style.display = 'none';
+      }
+    });
+  }
+});
+
+let _confirmCallback = null;
+function showConfirmModal(options) {
+  const modal = document.getElementById('modal-confirm');
+  if (!modal) return;
+  document.getElementById('confirm-modal-title').textContent = options.title || 'Confirm Action';
+  document.getElementById('confirm-modal-message').textContent = options.message || 'Are you sure you want to proceed?';
+  const okBtn = document.getElementById('confirm-modal-ok');
+  okBtn.textContent = options.confirmText || 'Confirm';
+  if (options.tone === 'danger') {
+    okBtn.className = 'reject-button';
+    okBtn.style.padding = '8px 16px';
+  } else {
+    okBtn.className = 'button primary';
+    okBtn.style.padding = '';
+  }
+  _confirmCallback = options.onConfirm || null;
+  openModal('modal-confirm');
+}
+
+function closeConfirmModal(confirmed) {
+  closeModal('modal-confirm');
+  if (confirmed && typeof _confirmCallback === 'function') {
+    const cb = _confirmCallback;
+    _confirmCallback = null;
+    cb();
+  } else {
+    _confirmCallback = null;
+  }
+}
+
+document.getElementById('confirm-modal-ok')?.addEventListener('click', () => closeConfirmModal(true));
+
+function togglePw(btn) {
+  const input = btn.previousElementSibling;
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = 'Hide';
+  } else {
+    input.type = 'password';
+    btn.textContent = 'Show';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('action') === 'logout') {
+    handleLogout();
+    return;
+  }
+  renderApp(params.get('page') || undefined);
+});
+</script>
+</body>
+</html>
